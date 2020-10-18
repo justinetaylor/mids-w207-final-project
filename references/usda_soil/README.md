@@ -6,4 +6,10 @@ I also found this National Soil Survey Handbook, which might be useful in demyst
 
 Soil Taxonomy Link (https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/home/?cid=nrcs142p2_053577) These are also pretty long and horrible. 
 
-Okay, I'm closing in. **This looks like the stuff we want!** (https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/survey/class/data/?cid=nrcs142p2_053583). **We want series name**. It looks like the other info on the soil might just be extra information that will potentially obscure it. I'll do some EDA to determine frequency that different classifications show up. BUT, I think that Leighcan might be the only imporatnt part and the st
+Okay, I'm closing in. **This looks like the stuff we want!** (https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/survey/class/data/?cid=nrcs142p2_053583). **We want series name**. It looks like the other info on the soil might just be extra information that will potentially obscure it. I'll do some EDA to determine frequency that different classifications show up. BUT, I think that "Leighcan" etc. might be the only imporatnt part and the other stuff might just be fluff. 
+
+* https://soilseries.sc.egov.usda.gov/OSD_Docs/B/BULLWARK.html
+* https://soilseries.sc.egov.usda.gov/OSD_Docs/C/CATHEDRAL.html
+* https://soilseries.sc.egov.usda.gov/OSD_Docs/G/GOTHIC.html
+* https://soilseries.sc.egov.usda.gov/OSD_Docs/L/LEIGHCAN.html
+* https://soilseries.sc.egov.usda.gov/OSD_Docs/M/MORAN.html
