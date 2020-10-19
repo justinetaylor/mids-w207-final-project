@@ -1,3 +1,7 @@
+# Forest Cover Type Prediction
+#### Team: Clear-Cut Solution: Kevin Martin, Yang Jing, Justine Schabel
+
+
 ```python
 # This tells matplotlib not to try opening a new window for each plot.
 %matplotlib inline
@@ -7,7 +11,7 @@ import numpy as np
 import pandas as pd 
 import csv
 import matplotlib.pyplot as plt
-
+import seaborn as sns
 
 # Libraries for models 
 from sklearn.ensemble import RandomForestClassifier
@@ -15,102 +19,514 @@ from sklearn.naive_bayes import BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
+from sklearn.neural_network import MLPClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler
 ```
+
+## Data Engineering
+
+### Load Data
 
 
 ```python
 # Read in training data 
-training_data = []
-with open('data/train.csv', newline='') as csvfile:
-    train_data = csv.reader(csvfile, delimiter=',', quotechar='|')
-    for row in train_data:
-        training_data.append(row)
-            
-# Convert to a numpy array of type int (except for the label row)
-training_data = np.array(training_data[1:]).astype(int)   
+train_df = pd.read_csv("data/train.csv")
+test_df = pd.read_csv("data/test.csv", nrows=30000)
+```
 
-# Read in test data
-testing_data = []
-with open('data/test.csv', newline='') as csvfile:
-    test_data = csv.reader(csvfile, delimiter=',', quotechar='|')
-    for row in test_data:
-        testing_data.append(row)
+### Initial Data Exploration
 
-# The testing file is huge so only read in max_test_data
-max_test_data = 30001
-test_data = np.array(testing_data[1:max_test_data]).astype(int)        
+First, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
+
+
+```python
+# Split training data (labeled) into 80% training and 20% dev) and randomly sample 
+training_data = train_df.sample(frac=0.8)
+dev_data_df = train_df.drop(training_data.index)
+
+# Examine shape of both data sets
+print(training_data.shape)
+print(dev_data_df.shape)
+
+# Briefly examine feature attributes for the training data 
+training_data.describe()
+```
+
+    (12096, 56)
+    (3024, 56)
+
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Id</th>
+      <th>Elevation</th>
+      <th>Aspect</th>
+      <th>Slope</th>
+      <th>Horizontal_Distance_To_Hydrology</th>
+      <th>Vertical_Distance_To_Hydrology</th>
+      <th>Horizontal_Distance_To_Roadways</th>
+      <th>Hillshade_9am</th>
+      <th>Hillshade_Noon</th>
+      <th>Hillshade_3pm</th>
+      <th>...</th>
+      <th>Soil_Type32</th>
+      <th>Soil_Type33</th>
+      <th>Soil_Type34</th>
+      <th>Soil_Type35</th>
+      <th>Soil_Type36</th>
+      <th>Soil_Type37</th>
+      <th>Soil_Type38</th>
+      <th>Soil_Type39</th>
+      <th>Soil_Type40</th>
+      <th>Cover_Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>...</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>7590.469246</td>
+      <td>2748.255622</td>
+      <td>157.543485</td>
+      <td>16.523892</td>
+      <td>228.731564</td>
+      <td>51.382027</td>
+      <td>1709.796627</td>
+      <td>212.391782</td>
+      <td>218.956597</td>
+      <td>135.463294</td>
+      <td>...</td>
+      <td>0.044974</td>
+      <td>0.041005</td>
+      <td>0.001405</td>
+      <td>0.006779</td>
+      <td>0.000827</td>
+      <td>0.002397</td>
+      <td>0.048694</td>
+      <td>0.043403</td>
+      <td>0.030010</td>
+      <td>3.989831</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>4367.701068</td>
+      <td>418.321401</td>
+      <td>110.501546</td>
+      <td>8.453648</td>
+      <td>212.214340</td>
+      <td>61.748380</td>
+      <td>1320.422337</td>
+      <td>30.707801</td>
+      <td>22.734629</td>
+      <td>46.023956</td>
+      <td>...</td>
+      <td>0.207255</td>
+      <td>0.198311</td>
+      <td>0.037464</td>
+      <td>0.082059</td>
+      <td>0.028742</td>
+      <td>0.048907</td>
+      <td>0.215236</td>
+      <td>0.203770</td>
+      <td>0.170622</td>
+      <td>2.000243</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>1.000000</td>
+      <td>1863.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>-146.000000</td>
+      <td>0.000000</td>
+      <td>58.000000</td>
+      <td>99.000000</td>
+      <td>0.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>3806.750000</td>
+      <td>2372.000000</td>
+      <td>65.000000</td>
+      <td>10.000000</td>
+      <td>67.000000</td>
+      <td>5.000000</td>
+      <td>764.000000</td>
+      <td>196.000000</td>
+      <td>207.000000</td>
+      <td>106.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>2.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>7588.500000</td>
+      <td>2750.000000</td>
+      <td>126.000000</td>
+      <td>15.000000</td>
+      <td>180.000000</td>
+      <td>33.000000</td>
+      <td>1317.000000</td>
+      <td>219.000000</td>
+      <td>222.000000</td>
+      <td>138.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>4.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>11364.250000</td>
+      <td>3105.250000</td>
+      <td>264.000000</td>
+      <td>22.000000</td>
+      <td>330.000000</td>
+      <td>80.000000</td>
+      <td>2255.250000</td>
+      <td>235.000000</td>
+      <td>235.000000</td>
+      <td>168.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>6.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>15119.000000</td>
+      <td>3848.000000</td>
+      <td>360.000000</td>
+      <td>50.000000</td>
+      <td>1343.000000</td>
+      <td>554.000000</td>
+      <td>6890.000000</td>
+      <td>254.000000</td>
+      <td>254.000000</td>
+      <td>248.000000</td>
+      <td>...</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>7.000000</td>
+    </tr>
+  </tbody>
+</table>
+<p>8 rows × 56 columns</p>
+</div>
+
+
+
+Now, we'll isolate and explore the distribution of soil types. 
+
+
+```python
+# Isolate soil type column names
+soil_df = training_data[["Id",'Soil_Type1', 'Soil_Type2', 'Soil_Type3',
+       'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type7', 'Soil_Type8',
+       'Soil_Type9', 'Soil_Type10', 'Soil_Type11', 'Soil_Type12',
+       'Soil_Type13', 'Soil_Type14', 'Soil_Type15', 'Soil_Type16',
+       'Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
+       'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24',
+       'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
+       'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
+       'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36',
+       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40']]
+
+# TODO: What are these doing? 
+soil_df_unpivoted = soil_df.melt(id_vars="Id",var_name="soil_type",value_name="yes")
+mask1 = soil_df_unpivoted["yes"] ==1
+soil_df_unpivoted = soil_df_unpivoted[mask1]
+
+
+# Examine the fequencies of soil types
+soil_df_unpivoted["soil_type"].value_counts().to_frame()
+
+# Histogram of soil types 
+plt.figure(figsize=(24,6))
+plt.hist(soil_df_unpivoted["soil_type"],bins=40)
+plt.xticks(rotation=90)
+plt.show()
+```
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_8_0.png)
+
+
+As we can see in the histogram above, there is an uneven distribution of occurances of soil types.
+
+
+```python
+sns.violinplot(x=training_data['Cover_Type'],y=training_data['Elevation'])
+plt.show()
+```
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_10_0.png)
+
+
+Here, we can see there is a relationship between the cover type and elevation. 
+
+
+```python
+sns.displot(training_data['Cover_Type'],rug=True)
+plt.show()
+```
+
+Here we can see that the training data has a somewhat uniform distribution of covertype and this tells us that our data set is balanced. 
+
+
+```python
+# Explore correlations between features
+train_corr=training_data.corr()
+# Rank correlations with "cover type"
+train_corr['Cover_Type'].abs().sort_values(ascending=False)
+st_list = ['Soil_Type1', 'Soil_Type2', 'Soil_Type3',
+       'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type8',
+       'Soil_Type9', 'Soil_Type10', 'Soil_Type11', 'Soil_Type12',
+       'Soil_Type13', 'Soil_Type14', 'Soil_Type16','Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
+       'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24',
+       'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
+       'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
+       'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36',
+       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40']
+# Visualize the distribution of soil type and "cover type"
+fig, axes = plt.subplots(19,2,figsize=(24,120))
+for i in range(len(st_list)):
+    sns.violinplot(y=train_df['Cover_Type'],x=training_data[st_list[i]], ax=axes[i//2,i%2])
+plt.show()
+```
+
+Here we can examine the relationship between soil type and cover type for each soil type. # TODO: Discuss more
+
+Now, we'll isolate and explore the distribution of wilderness types. 
+
+
+```python
+wilderness_list =['Wilderness_Area1','Wilderness_Area2','Wilderness_Area3','Wilderness_Area4']
+
+# Visualize the distribution of wilderness area and "cover type"
+fig, axes = plt.subplots(2,2,figsize=(24,12))
+for i in range(4):
+    sns.violinplot(y=training_data['Cover_Type'],x=training_data[wilderness_list[i]], ax=axes[i//2,i%2])
+plt.show()
+```
+
+### Feature Engineering
+
+Now we'll begin modifying both the train and dev data based on our exploratory data analysis. First, we'll drop soil types that don't exist in the training set. Then we will combine soil types 35, 38, 39 and 40 because they have a very similar distribution. 
+
+
+```python
+# Remove soil type 7 and 15 due to no data
+training_data.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
+dev_data_df.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
+
+# Remove soil type 19, 37, 34, 21, 27,36,9, 28,8,25 due to no limited data - TODO: should we be dropping these? 
+training_data.drop(columns=["Soil_Type19", "Soil_Type37","Soil_Type34", "Soil_Type21","Soil_Type27", "Soil_Type36","Soil_Type9", "Soil_Type28","Soil_Type8", "Soil_Type25"], inplace=True)
+dev_data_df.drop(columns=["Soil_Type19", "Soil_Type37","Soil_Type34", "Soil_Type21","Soil_Type27", "Soil_Type36","Soil_Type9", "Soil_Type28","Soil_Type8", "Soil_Type25"], inplace=True)
+
+# Combine soil type 35,38,39, 40
+training_data["soil_type35383940"] = training_data["Soil_Type38"] +  training_data["Soil_Type39"] + training_data["Soil_Type40"] +  training_data["Soil_Type35"]
+training_data.drop(columns=["Soil_Type35","Soil_Type38", "Soil_Type39",'Soil_Type40'], inplace=True)
+dev_data_df["soil_type35383940"] = dev_data_df["Soil_Type38"] +  dev_data_df["Soil_Type39"] + dev_data_df["Soil_Type40"] +  dev_data_df["Soil_Type35"]
+dev_data_df.drop(columns=["Soil_Type35","Soil_Type38", "Soil_Type39",'Soil_Type40'], inplace=True)
+
+# Check shape is as expected
+print(training_data.shape)
+print(dev_data_df.shape)
+```
+
+Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
+
+
+```python
+# Collect numeric feature column names - so we can easily access these columns when modifying them 
+num_cols = ['Elevation', 'Aspect', 'Slope',
+       'Horizontal_Distance_To_Hydrology', 'Vertical_Distance_To_Hydrology',
+       'Horizontal_Distance_To_Roadways', 'Hillshade_9am', 'Hillshade_Noon',
+       'Hillshade_3pm', 'Horizontal_Distance_To_Fire_Points']
+
+# Normalize features using the standard scaler [training data]
+# scaler = StandardScaler()
+# num_train_df = pd.DataFrame(scaler.fit_transform(training_data[num_cols]), columns=num_cols)
+# num_train_df.head()
+# training_data.drop(columns=num_cols, inplace=True)
+# print(training_data.shape)
+# temp = pd.concat([training_data, num_train_df], axis=1)
+# print(temp.shape)
+# temp2 = training_data.merge(num_train_df, left_index=True, right_index=True)
+# print(temp2.shape)
+# # Standardize dev data using the training data original mean and standard deviation
+# dev_data_minus_mean = dev_data_df[num_cols].sub(scaler.mean_, axis='columns')
+# dev_data_standardized = dev_data_minus_mean.div(scaler.var_**(1/2)+1e-05, axis='columns')
+# # Drop original numeric columns (unstandardized)
+# dev_data_df.drop(columns=num_cols, inplace=True)
+# # Replace with standardized columns
+# dev_data_df = dev_data_df.merge(dev_data_standardized, left_index=True, right_index=True, how='left')
+# print(dev_data_df.shape)
 ```
 
 
 ```python
-# Shuffle the input: create a random permutation of the integers between 0 and the number of data points and apply this
-# permutation to X and Y.
-# NOTE: Each time you run this cell, you'll re-shuffle the data, resulting in a different ordering.
-shuffle = np.random.permutation(np.arange(training_data.shape[0]))
-training_data = training_data[shuffle]
+"""
+Normalize Manually:
+- Subtract mean and divide by standard deviation (feature wise) using training data mean/std
+- To avoid dividing by 0, add 1e-10 to the standard deviation
+- Take the mean on axis 0 (feature wise)
+- Reshape it to be a column vector
+- Transpose it so we can subtract properly
+""" 
+train_mean = training_data[num_cols].mean(axis=0)
+train_std = training_data[num_cols].std(axis=0)
 
-# Split training data (labeled) into 80% training and 20% dev) and skip over the id column (it doesn't add an information)
-# Immediately cast train data as floats so we can normalize it later 
-split_index = int(len(training_data) * 0.8)
-train_data = training_data[:split_index, 1:-1].astype(np.float64)
-train_labels = training_data[:split_index, -1]
-dev_data = training_data[split_index:, 1:-1].astype(np.float64)
-dev_labels = training_data[split_index:, -1]
-test_data = test_data[:,1:]
+# Examine mean and std of training data features
+print("Mean by Feature:\n", train_mean)
+print("\nStandard deviation by Features:\n", train_std)
+```
 
-# Retrieve the mean and standard deviation of each feature - axis=0 is for going along the columns, keepdims forces the dimensions to stay the same
-# Only compute it for the first ten features (they're numeric - not one hot or categorical)
-num_columns = 10
-# To avoid dividing by 0, add 1e-10 to the standard deviation 
-smoothing = 1e-10
-# USe the mean and standard deviation of the training data
-feature_mean = train_data[:,:num_columns].mean(axis=0, keepdims=True)
-feature_std = train_data[:,:num_columns].std(axis=0, keepdims=True)
-# Normalize all numeric features except wilderness type and soil type (one-hot) - first 10 columns
-train_data[:,:num_columns] = train_data[:,:num_columns] - feature_mean
-train_data[:,:num_columns] = np.divide(train_data[:,:num_columns], feature_std + smoothing)
-# Normalize dev data as well (using training mean and standard deviation)
-dev_data[:,:num_columns] = dev_data[:,:num_columns] - feature_mean
-dev_data[:,:num_columns] = dev_data[:,:num_columns]/(feature_std + smoothing)
+
+```python
+train_mean = train_mean.values.reshape(-1,1).transpose()
+train_std = train_std.values.reshape(-1,1).transpose()
+```
+
+
+```python
+# Double check shape
+print(train_mean.shape, train_std.shape)
+```
+
+
+```python
+training_data[num_cols] = training_data[num_cols].sub(train_mean, axis=1)
+training_data[num_cols] = training_data[num_cols].divide(train_std,axis=1)
+
+dev_data_df[num_cols] = dev_data_df[num_cols].sub(train_mean, axis=1)
+dev_data_df[num_cols] = dev_data_df[num_cols].divide(train_std,axis=1)
+```
+
+
+```python
+training_data.head()
+```
+
+Next we will split the data and the labels. 
+
+
+```python
+# Split into data and labels
+train_data = training_data.drop(columns=["Cover_Type"])
+train_labels = training_data["Cover_Type"]
+dev_data = dev_data_df.drop(columns=["Cover_Type"])
+dev_labels = dev_data_df["Cover_Type"]
+test_data = test_df
+
+# Double check the shape
+print(train_data.shape)
+print(dev_data.shape)
 ```
 
 
 ```python
 # Explore and confirm the shape of the data
 print("Training data shape: {0} Training labels shape: {1}".format(train_data.shape, train_labels.shape))
-print("Dev data shape: {0} Dev labels shape: {1}".format(train_data.shape, train_labels.shape))
+print("Dev data shape: {0} Dev labels shape: {1}".format(dev_data.shape, dev_data.shape))
 print("Test data shape: ", test_data.shape)
-print("First training example: ", train_data[0], train_labels [0])
-print("First dev example: ", dev_data[0,:], dev_labels [0])
-print("First test example: ", test_data[0])
 ```
 
-    Training data shape: (12096, 54) Training labels shape: (12096,)
-    Dev data shape: (12096, 54) Dev labels shape: (12096,)
-    Test data shape:  (30000, 54)
-    First training example:  [-1.15073206  1.76309729  2.55351957 -0.79227979  0.02151651 -0.38583463
-     -2.80073415 -3.09550296  0.14965231 -0.99172149  0.          0.
-      0.          1.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          1.
-      0.          0.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          0.        ] 3
-    First dev example:  [-0.74688418  1.23486517  0.41571389 -0.79227979 -0.48780573 -1.0186886
-     -1.75572141  0.57058401  1.65349798 -0.54355007  0.          0.
-      0.          1.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          1.
-      0.          0.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          0.
-      0.          0.          0.          0.          0.          0.        ] 3
-    First test example:  [2680  354   14    0    0 2684  196  214  156 6645    1    0    0    0
-        0    0    0    0    0    0    0    0    0    0    0    0    0    0
-        0    0    0    0    0    0    0    0    0    0    0    0    0    0
-        1    0    0    0    0    0    0    0    0    0    0    0]
 
+```python
+# Examine Training Data 
+train_data.head()
+```
+
+## Models
+#### Random Forest
 
 
 ```python
@@ -121,106 +537,17 @@ def RandomForest(num_trees):
     predictions = model.predict(dev_data)
     score = model.score(dev_data, dev_labels)
     print("Random Forest Performance for {0} trees: {1}".format(num_trees,score))
-    print("Random Forest Confusion Matrix:\n")
-    print(confusion_matrix(predictions, dev_labels))
-    
-    #plot_confusion_matrix
+    # Plot_confusion_matrix
     plot_confusion_matrix(model, dev_data, dev_labels, values_format = "d")
     plt.title("{} Tree Random Forest Confusion Matrix:".format(num_trees))
     plt.plot()
-    print('\n\n')
     
 num_trees_list = [1,3,5,10,100]
 for num_trees in num_trees_list:
     RandomForest(num_trees)
 ```
 
-    Random Forest Performance for 1 trees: 0.576058201058201
-    Random Forest Confusion Matrix:
-    
-    [[331 154   0   0   7   0 216]
-     [ 43 137   0   0  64   1   0]
-     [  0   1 155  70   0  90   0]
-     [  0   0  35 334   0  29   0]
-     [ 29 114 156   0 360 118   0]
-     [  1  17  63   8  13 214   0]
-     [ 38  15   0   0   0   0 211]]
-    
-    
-    
-    Random Forest Performance for 3 trees: 0.667989417989418
-    Random Forest Confusion Matrix:
-    
-    [[256 123   0   0  25   0  32]
-     [106 180   4   0  16   1   8]
-     [  0  13 201   9  10  86   0]
-     [  0   0  59 394   0  43   0]
-     [ 27  97  60   0 380  98   2]
-     [  1  14  83   9  12 224   0]
-     [ 52  11   2   0   1   0 385]]
-    
-    
-    
-    Random Forest Performance for 5 trees: 0.7116402116402116
-    Random Forest Confusion Matrix:
-    
-    [[293 143   1   0  11   0  32]
-     [ 57 163   4   0  34   2   3]
-     [  0  10 270  20  17 109   0]
-     [  0   0  27 388   0  29   0]
-     [ 35  96  11   0 369  30   5]
-     [  0  14  95   4  13 282   0]
-     [ 57  12   1   0   0   0 387]]
-    
-    
-    
-    Random Forest Performance for 10 trees: 0.7341269841269841
-    Random Forest Confusion Matrix:
-    
-    [[278 104   0   0   5   0  22]
-     [ 62 204   2   0  28   3   2]
-     [  0  10 284  17  13 112   0]
-     [  0   0  34 383   0  22   0]
-     [ 26  91  23   0 387  34   0]
-     [  1  14  66  12  11 281   0]
-     [ 75  15   0   0   0   0 403]]
-    
-    
-    
-    Random Forest Performance for 100 trees: 0.7493386243386243
-    Random Forest Confusion Matrix:
-    
-    [[298 110   0   0   1   0  24]
-     [ 53 208   0   0  35   0   0]
-     [  0   7 296  12  18 108   0]
-     [  0   0  31 394   0  21   0]
-     [ 25  87  16   0 382  35   3]
-     [  1  14  66   6   8 288   0]
-     [ 65  12   0   0   0   0 400]]
-    
-    
-    
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_4_1.png)
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_4_2.png)
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_4_3.png)
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_4_4.png)
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_4_5.png)
-
+#### Naive Bayes (Bernoulli)
 
 
 ```python
@@ -231,8 +558,7 @@ def NB(alf):
     predictions = model.predict(dev_data)
     score = model.score(dev_data, dev_labels)
     print("BernoulliNB for alph = {0}: accuracy = {1}".format(alf,score))
-    
-    #plot_confusion_matrix
+    # Plot Confusion Matrix
     plot_confusion_matrix(model, dev_data, dev_labels, values_format = "d")
     plt.title("NB Confusion Matrix with alpha: {}".format(alf))
     plt.plot()
@@ -245,15 +571,7 @@ for alpha in alphas_list:
     NB(alpha)
 ```
 
-    BernoulliNB for alph = 0.01: accuracy = 0.6121031746031746
-    
-    
-    
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_5_1.png)
-
+#### K-Nearest Neighbors
 
 
 ```python
@@ -264,61 +582,38 @@ def KNN(kn):
     predictions = model.predict(dev_data)
     score = model.score(dev_data, dev_labels)
     print("KNN {0} neighbors : accuracy = {1}".format(kn,score))
-    
-    #plot_confusion_matrix
+    # Plot Confusion Matrix
     plot_confusion_matrix(model, dev_data, dev_labels, values_format = "d")
     plt.title("KNN Confusion Matrix with {} Neighbors".format(kn))
     plt.plot()
-    print('\n\n')
     
-# the alpha isn't actually making a difference 
+# The alpha isn't actually making a difference 
 neigh_list = [1,2,4, 7, 10]
-# neigh_list = [5]
 for neigh in neigh_list:
     KNN(neigh)
 ```
 
-    KNN 1 neighbors : accuracy = 0.8118386243386243
+#### Multi-layer Perceptron
+
+
+```python
+# Try Multi-Layer Perceptron - before any data cleaning 
+def MLP():
+#    model = MLPClassifier(solver='adam', alpha=1e-6, hidden_layer_sizes=(100, ), random_state=0) .8257
+#    model = MLPClassifier(solver='adam', alpha=1e-3, hidden_layer_sizes=(100, ), random_state=0)  .82969
+#    model = MLPClassifier(solver='adam', alpha=1e-3, hidden_layer_sizes=(200, ), random_state=0) .837
+#    model = MLPClassifier(solver='adam', alpha=1e-3, hidden_layer_sizes=(100, ), random_state=0, activation='tanh') .83068
+
+    # Default activation is 'relu', random state lets us get the same result every time (so we can tune other parameters)
+    # max_iter is 200 by default, but more helps. alpha is the regularization parameter. solver is 'adam' by default
+    model = MLPClassifier(alpha=1e-3, hidden_layer_sizes=(100,), random_state=0, max_iter=300) 
+    model.fit(train_data, train_labels) 
+    score = model.score(dev_data, dev_labels)
+    print("MLP accuracy = ",score)
+
     
-    
-    
-    KNN 2 neighbors : accuracy = 0.7797619047619048
-    
-    
-    
-    KNN 4 neighbors : accuracy = 0.7876984126984127
-    
-    
-    
-    KNN 7 neighbors : accuracy = 0.7757936507936508
-    
-    
-    
-    KNN 10 neighbors : accuracy = 0.7622354497354498
-    
-    
-    
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_6_1.png)
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_6_2.png)
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_6_3.png)
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_6_4.png)
-
-
-
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_6_5.png)
-
+MLP()
+```
 
 ### End matter
 
@@ -331,12 +626,14 @@ for neigh in neigh_list:
     * https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
   * Pretty Confusion Matrix
     * https://scikit-learn.org/stable/modules/generated/sklearn.metrics.plot_confusion_matrix.html
+  * Preprocessing
+    * https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.normalize.html
 * Soil information
   * https://www.uidaho.edu/cals/soil-orders/aridisols
   
 #### Backup Formats
 
-*because sometimes you just want to look at the markdown real quick*
+*because sometimes you just want to look at the markdown or whatever real quick*
 
 
 ```python
@@ -346,4 +643,14 @@ for neigh in neigh_list:
 
 # Also archiving this bad boy
 !jupyter nbconvert clear-cut-solution.ipynb --to html --output="backups/clear-cut-solution"
+```
+
+
+```python
+
+```
+
+
+```python
+
 ```
