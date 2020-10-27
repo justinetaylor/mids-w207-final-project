@@ -248,7 +248,7 @@ test_df.drop(columns=["Id"],inplace=True)
 # * See if the "very/extremely" qualifiers on stony should be removed. Do they mean the same thing?
 # * See if changing "rubbly", "bouldery", "stoney" to all one indicator would be better. Do they all mean the same thing?
 
-# In[30]:
+# In[15]:
 
 
 #### Analyze frequqncy that imporant types of soil show up ####
@@ -313,11 +313,27 @@ trans_soil = np.matmul(soil_cols,xform)
 trans_soil_df = pd.DataFrame(data = trans_soil, columns = new_cats)
 display(trans_soil_df)
 
+## Remove the features that have very low occurence rates
+
+# print(trans_soil_df.sum(axis=0))
+    # print occurence rates of the various features
+
+# remove low occurence soil types
+occ_lim = 0 #0, 2,100,300,900,1400 default # remove columns that have less than occ_lim examples in the data
+high_occ_ser = trans_soil_df.sum(axis=0) >= occ_lim
+high_occ_names = [entry for entry in high_occ_ser.index if high_occ_ser[entry]]
+trans_soil_df = trans_soil_df[high_occ_names]
+display(trans_soil_df)
+
 # combine the new soil features with the existing freatures in a single df
 df_new = train_df.drop(columns=og_soil_col_names)
 df_new = pd.concat([df_new, trans_soil_df],axis=1)
 df_new = df_new[[col for col in df_new if col not in ["Cover_Type"]]+["Cover_Type"]] #want cover type as last column
 display(df_new)
+
+
+# In[16]:
+
 
 # We'll just reassign the train_df here to be equal to df_new
 train_df = df_new
@@ -325,9 +341,11 @@ train_df = df_new
 
 # ### Additional Data Mungling
 # 
-# Then, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
+# #### Split into traingin and dev
+# 
+# split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
 
-# In[31]:
+# In[17]:
 
 
 # Split training data (labeled) into 80% training and 20% dev) and randomly sample 
@@ -343,9 +361,7 @@ display(training_data.describe())
 display(dev_data_df.describe())
 
 
-# Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
-
-# In[32]:
+# In[18]:
 
 
 # Split into data and labels
@@ -360,13 +376,17 @@ print(train_data.shape)
 print(dev_data.shape)
 
 
-# In[33]:
+# In[19]:
 
 
 train_data.columns
 
 
-# In[34]:
+# ##### Normalize the numeric data
+# 
+# Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
+
+# In[20]:
 
 
 # Collect numeric feature column names - so we can easily access these columns when modifying them 
@@ -385,23 +405,23 @@ dev_data[num_cols] = norm.transform(dev_data[num_cols])
 print(dev_data.shape)
 
 
-# In[35]:
+# In[21]:
 
 
 # Double check shape
 print(train_data.shape, dev_data.shape)
 
 
-# In[36]:
+# In[22]:
 
 
 # Explore and confirm the shape of the data
 print("Training data shape: {0} Training labels shape: {1}".format(train_data.shape, train_labels.shape))
-print("Dev data shape: {0} Dev labels shape: {1}".format(dev_data.shape, dev_data.shape))
+print("Dev data shape: {0} Dev labels shape: {1}".format(dev_data.shape, dev_labels.shape))
 print("Test data shape: ", test_data.shape)
 
 
-# In[37]:
+# In[23]:
 
 
 # Examine Training Data 
@@ -411,7 +431,7 @@ dev_data.head()
 # ## Models
 # #### Random Forest
 
-# In[38]:
+# In[24]:
 
 
 # Try a random forest - before any data cleaning 
@@ -433,7 +453,7 @@ for num_trees in num_trees_list:
 
 # #### Naive Bayes (Bernoulli)
 
-# In[39]:
+# In[25]:
 
 
 # Try Naive Bayes - before any data cleaning 
@@ -458,7 +478,7 @@ for alpha in alphas_list:
 
 # #### K-Nearest Neighbors
 
-# In[40]:
+# In[26]:
 
 
 # Try K Nearest Neighbors - before any data cleaning 
@@ -481,7 +501,7 @@ for neigh in neigh_list:
 
 # #### Multi-layer Perceptron
 
-# In[41]:
+# In[27]:
 
 
 # Try Multi-Layer Perceptron - before any data cleaning 
@@ -522,7 +542,7 @@ MLP()
 # 
 # *because sometimes you just want to look at the markdown or whatever real quick*
 
-# In[27]:
+# In[28]:
 
 
 #Create a backup of the jupyter notebook in a format for where changes are easier to see.
