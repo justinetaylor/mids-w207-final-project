@@ -418,41 +418,41 @@ df_circle.head()
       <th>0</th>
       <td>0.670229</td>
       <td>0.742154</td>
-      <td>1.543603</td>
-      <td>1.034567</td>
-      <td>1.145591</td>
+      <td>1.542300</td>
+      <td>1.033694</td>
+      <td>1.144624</td>
     </tr>
     <tr>
       <th>1</th>
       <td>-0.521551</td>
       <td>0.853220</td>
-      <td>1.517618</td>
-      <td>-0.791515</td>
-      <td>1.294862</td>
+      <td>1.284087</td>
+      <td>-0.669717</td>
+      <td>1.095609</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0.696080</td>
       <td>0.717964</td>
-      <td>1.517715</td>
-      <td>1.056452</td>
-      <td>1.089665</td>
+      <td>1.203784</td>
+      <td>0.837930</td>
+      <td>0.864274</td>
     </tr>
     <tr>
       <th>3</th>
       <td>-0.873312</td>
       <td>-0.487161</td>
-      <td>1.079391</td>
-      <td>-0.942645</td>
-      <td>-0.525838</td>
+      <td>1.151990</td>
+      <td>-1.006047</td>
+      <td>-0.561205</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0.850904</td>
       <td>0.525322</td>
-      <td>1.195661</td>
-      <td>1.017392</td>
-      <td>0.628107</td>
+      <td>1.121546</td>
+      <td>0.954328</td>
+      <td>0.589173</td>
     </tr>
   </tbody>
 </table>
@@ -746,14 +746,23 @@ trans_soil = np.matmul(soil_cols,xform)
 trans_soil_df = pd.DataFrame(data = trans_soil, columns = new_cats)
 display(trans_soil_df)
 
+## Remove the features that have very low occurence rates
+
+# print(trans_soil_df.sum(axis=0))
+    # print occurence rates of the various features
+
+# remove low occurence soil types
+occ_lim = 1400 #0, 2,100,300,900,1400 default # remove columns that have less than occ_lim examples in the data
+high_occ_ser = trans_soil_df.sum(axis=0) >= occ_lim
+high_occ_names = [entry for entry in high_occ_ser.index if high_occ_ser[entry]]
+trans_soil_df = trans_soil_df[high_occ_names]
+display(trans_soil_df)
+
 # combine the new soil features with the existing freatures in a single df
 df_new = train_df.drop(columns=og_soil_col_names)
 df_new = pd.concat([df_new, trans_soil_df],axis=1)
 df_new = df_new[[col for col in df_new if col not in ["Cover_Type"]]+["Cover_Type"]] #want cover type as last column
 display(df_new)
-
-# We'll just reassign the train_df here to be equal to df_new
-train_df = df_new
 ```
 
     -- New Feature Names --
@@ -1093,6 +1102,223 @@ train_df = df_new
   <thead>
     <tr style="text-align: right;">
       <th></th>
+      <th>bullwark</th>
+      <th>catamount</th>
+      <th>como</th>
+      <th>cryaquolls</th>
+      <th>extremely_stony</th>
+      <th>legault</th>
+      <th>leighcan</th>
+      <th>moran</th>
+      <th>ratake</th>
+      <th>rock_land</th>
+      <th>rock_outcrop</th>
+      <th>rubbly</th>
+      <th>vanet</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>15115</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>15116</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>15117</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>15118</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>15119</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+<p>15120 rows × 13 columns</p>
+</div>
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
       <th>Elevation</th>
       <th>Slope</th>
       <th>Horizontal_Distance_To_Hydrology</th>
@@ -1104,15 +1330,15 @@ train_df = df_new
       <th>Horizontal_Distance_To_Fire_Points</th>
       <th>Wilderness_Area1</th>
       <th>...</th>
+      <th>extremely_stony</th>
+      <th>legault</th>
+      <th>leighcan</th>
+      <th>moran</th>
+      <th>ratake</th>
+      <th>rock_land</th>
+      <th>rock_outcrop</th>
       <th>rubbly</th>
-      <th>stony</th>
-      <th>supervisor</th>
-      <th>till_substratum</th>
-      <th>troutville</th>
       <th>vanet</th>
-      <th>very_stony</th>
-      <th>warm</th>
-      <th>wetmore</th>
       <th>Cover_Type</th>
     </tr>
   </thead>
@@ -1130,8 +1356,8 @@ train_df = df_new
       <td>6279</td>
       <td>1</td>
       <td>...</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
@@ -1154,8 +1380,8 @@ train_df = df_new
       <td>6225</td>
       <td>1</td>
       <td>...</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
@@ -1183,7 +1409,7 @@ train_df = df_new
       <td>0</td>
       <td>0</td>
       <td>0</td>
-      <td>0</td>
+      <td>1</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
@@ -1202,12 +1428,12 @@ train_df = df_new
       <td>6211</td>
       <td>1</td>
       <td>...</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
@@ -1226,8 +1452,8 @@ train_df = df_new
       <td>6172</td>
       <td>1</td>
       <td>...</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
@@ -1274,14 +1500,14 @@ train_df = df_new
       <td>1282</td>
       <td>0</td>
       <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
       <td>1</td>
       <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>3</td>
     </tr>
@@ -1298,14 +1524,14 @@ train_df = df_new
       <td>1325</td>
       <td>0</td>
       <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
       <td>1</td>
       <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>3</td>
     </tr>
@@ -1322,14 +1548,14 @@ train_df = df_new
       <td>1187</td>
       <td>0</td>
       <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
       <td>1</td>
       <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>3</td>
     </tr>
@@ -1346,14 +1572,14 @@ train_df = df_new
       <td>932</td>
       <td>0</td>
       <td>...</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
       <td>1</td>
       <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>3</td>
     </tr>
@@ -1374,22 +1600,30 @@ train_df = df_new
       <td>0</td>
       <td>0</td>
       <td>0</td>
-      <td>0</td>
-      <td>1</td>
       <td>1</td>
       <td>0</td>
       <td>0</td>
+      <td>0</td>
+      <td>1</td>
       <td>3</td>
     </tr>
   </tbody>
 </table>
-<p>15120 rows × 52 columns</p>
+<p>15120 rows × 29 columns</p>
 </div>
 
 
+
+```python
+# We'll just reassign the train_df here to be equal to df_new
+train_df = df_new
+```
+
 ### Additional Data Mungling
 
-Then, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
+#### Split into traingin and dev
+
+split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
 
 
 ```python
@@ -1406,8 +1640,8 @@ display(training_data.describe())
 display(dev_data_df.describe())
 ```
 
-    (12096, 52)
-    (3024, 52)
+    (12096, 29)
+    (3024, 29)
 
 
 
@@ -1440,22 +1674,22 @@ display(dev_data_df.describe())
       <th>Horizontal_Distance_To_Fire_Points</th>
       <th>Wilderness_Area1</th>
       <th>...</th>
+      <th>extremely_stony</th>
+      <th>legault</th>
+      <th>leighcan</th>
+      <th>moran</th>
+      <th>ratake</th>
+      <th>rock_land</th>
+      <th>rock_outcrop</th>
       <th>rubbly</th>
-      <th>stony</th>
-      <th>supervisor</th>
-      <th>till_substratum</th>
-      <th>troutville</th>
       <th>vanet</th>
-      <th>very_stony</th>
-      <th>warm</th>
-      <th>wetmore</th>
       <th>Cover_Type</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>count</th>
-      <td>12096.00000</td>
+      <td>12096.000000</td>
       <td>12096.000000</td>
       <td>12096.000000</td>
       <td>12096.000000</td>
@@ -1470,69 +1704,69 @@ display(dev_data_df.describe())
       <td>12096.000000</td>
       <td>12096.000000</td>
       <td>12096.000000</td>
+      <td>12096.00000</td>
       <td>12096.000000</td>
-      <td>12096.000000</td>
-      <td>12096.000000</td>
+      <td>12096.00000</td>
       <td>12096.000000</td>
       <td>12096.000000</td>
       <td>12096.000000</td>
     </tr>
     <tr>
       <th>mean</th>
-      <td>2748.89294</td>
-      <td>16.498016</td>
-      <td>226.298694</td>
-      <td>50.666749</td>
-      <td>1713.295387</td>
-      <td>212.657490</td>
-      <td>219.085813</td>
-      <td>135.252397</td>
-      <td>1508.751736</td>
-      <td>0.237930</td>
+      <td>2751.317874</td>
+      <td>16.464451</td>
+      <td>225.819610</td>
+      <td>50.661293</td>
+      <td>1716.772652</td>
+      <td>212.892692</td>
+      <td>219.010582</td>
+      <td>134.959491</td>
+      <td>1517.698826</td>
+      <td>0.238343</td>
       <td>...</td>
-      <td>0.329034</td>
-      <td>0.058449</td>
-      <td>0.000083</td>
-      <td>0.074157</td>
-      <td>0.000744</td>
-      <td>0.096478</td>
-      <td>0.050347</td>
-      <td>0.001075</td>
-      <td>0.043155</td>
-      <td>3.987434</td>
+      <td>0.410466</td>
+      <td>0.148727</td>
+      <td>0.294643</td>
+      <td>0.120536</td>
+      <td>0.09838</td>
+      <td>0.152612</td>
+      <td>0.43502</td>
+      <td>0.329448</td>
+      <td>0.094246</td>
+      <td>3.984127</td>
     </tr>
     <tr>
       <th>std</th>
-      <td>417.38242</td>
-      <td>8.459147</td>
-      <td>210.471922</td>
-      <td>61.176043</td>
-      <td>1318.020151</td>
-      <td>30.669226</td>
-      <td>22.727316</td>
-      <td>45.980340</td>
-      <td>1099.393886</td>
-      <td>0.425834</td>
+      <td>416.257896</td>
+      <td>8.460626</td>
+      <td>206.602678</td>
+      <td>60.565495</td>
+      <td>1328.347663</td>
+      <td>30.331696</td>
+      <td>22.870946</td>
+      <td>45.800508</td>
+      <td>1104.388638</td>
+      <td>0.426088</td>
       <td>...</td>
-      <td>0.469882</td>
-      <td>0.234600</td>
-      <td>0.009092</td>
-      <td>0.262037</td>
-      <td>0.027268</td>
-      <td>0.295258</td>
-      <td>0.218669</td>
-      <td>0.032767</td>
-      <td>0.203214</td>
-      <td>1.997354</td>
+      <td>0.491939</td>
+      <td>0.355834</td>
+      <td>0.455901</td>
+      <td>0.325600</td>
+      <td>0.29784</td>
+      <td>0.359628</td>
+      <td>0.49578</td>
+      <td>0.470032</td>
+      <td>0.292183</td>
+      <td>2.002540</td>
     </tr>
     <tr>
       <th>min</th>
-      <td>1879.00000</td>
+      <td>1863.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>-146.000000</td>
       <td>0.000000</td>
-      <td>0.000000</td>
+      <td>59.000000</td>
       <td>99.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
@@ -1542,89 +1776,89 @@ display(dev_data_df.describe())
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>1.000000</td>
     </tr>
     <tr>
       <th>25%</th>
-      <td>2374.75000</td>
+      <td>2376.750000</td>
       <td>10.000000</td>
-      <td>60.000000</td>
+      <td>67.000000</td>
       <td>5.000000</td>
       <td>765.000000</td>
       <td>196.000000</td>
       <td>207.000000</td>
       <td>107.000000</td>
-      <td>726.000000</td>
+      <td>731.000000</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>2.000000</td>
     </tr>
     <tr>
       <th>50%</th>
-      <td>2751.00000</td>
+      <td>2755.000000</td>
       <td>15.000000</td>
       <td>180.000000</td>
       <td>32.000000</td>
-      <td>1320.000000</td>
+      <td>1315.000000</td>
       <td>220.000000</td>
       <td>223.000000</td>
       <td>138.000000</td>
-      <td>1260.000000</td>
+      <td>1265.000000</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>4.000000</td>
     </tr>
     <tr>
       <th>75%</th>
-      <td>3101.00000</td>
+      <td>3105.000000</td>
       <td>22.000000</td>
       <td>324.000000</td>
       <td>79.000000</td>
-      <td>2270.000000</td>
+      <td>2271.000000</td>
       <td>235.000000</td>
       <td>235.000000</td>
       <td>167.000000</td>
-      <td>1982.000000</td>
+      <td>1996.000000</td>
       <td>0.000000</td>
       <td>...</td>
       <td>1.000000</td>
       <td>0.000000</td>
+      <td>1.000000</td>
       <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
+      <td>1.00000</td>
+      <td>1.000000</td>
       <td>0.000000</td>
       <td>6.000000</td>
     </tr>
     <tr>
       <th>max</th>
-      <td>3849.00000</td>
-      <td>52.000000</td>
+      <td>3849.000000</td>
+      <td>50.000000</td>
       <td>1343.000000</td>
       <td>554.000000</td>
       <td>6890.000000</td>
@@ -1638,16 +1872,16 @@ display(dev_data_df.describe())
       <td>1.000000</td>
       <td>1.000000</td>
       <td>1.000000</td>
+      <td>1.00000</td>
       <td>1.000000</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
+      <td>1.00000</td>
       <td>1.000000</td>
       <td>1.000000</td>
       <td>7.000000</td>
     </tr>
   </tbody>
 </table>
-<p>8 rows × 52 columns</p>
+<p>8 rows × 29 columns</p>
 </div>
 
 
@@ -1681,15 +1915,15 @@ display(dev_data_df.describe())
       <th>Horizontal_Distance_To_Fire_Points</th>
       <th>Wilderness_Area1</th>
       <th>...</th>
+      <th>extremely_stony</th>
+      <th>legault</th>
+      <th>leighcan</th>
+      <th>moran</th>
+      <th>ratake</th>
+      <th>rock_land</th>
+      <th>rock_outcrop</th>
       <th>rubbly</th>
-      <th>stony</th>
-      <th>supervisor</th>
-      <th>till_substratum</th>
-      <th>troutville</th>
       <th>vanet</th>
-      <th>very_stony</th>
-      <th>warm</th>
-      <th>wetmore</th>
       <th>Cover_Type</th>
     </tr>
   </thead>
@@ -1709,9 +1943,9 @@ display(dev_data_df.describe())
       <td>...</td>
       <td>3024.000000</td>
       <td>3024.000000</td>
-      <td>3024.0</td>
       <td>3024.000000</td>
       <td>3024.000000</td>
+      <td>3024.00000</td>
       <td>3024.000000</td>
       <td>3024.000000</td>
       <td>3024.000000</td>
@@ -1720,70 +1954,70 @@ display(dev_data_df.describe())
     </tr>
     <tr>
       <th>mean</th>
-      <td>2751.041005</td>
-      <td>16.515873</td>
-      <td>230.783730</td>
-      <td>52.715608</td>
-      <td>1716.934524</td>
-      <td>212.891534</td>
-      <td>218.484788</td>
-      <td>134.450397</td>
-      <td>1520.729497</td>
-      <td>0.237765</td>
+      <td>2741.341270</td>
+      <td>16.650132</td>
+      <td>232.700066</td>
+      <td>52.737434</td>
+      <td>1703.025463</td>
+      <td>211.950728</td>
+      <td>218.785714</td>
+      <td>135.622024</td>
+      <td>1484.941138</td>
+      <td>0.236111</td>
       <td>...</td>
-      <td>0.335317</td>
-      <td>0.056217</td>
-      <td>0.0</td>
-      <td>0.073082</td>
-      <td>0.000331</td>
-      <td>0.089616</td>
-      <td>0.045635</td>
-      <td>0.000992</td>
-      <td>0.042328</td>
-      <td>4.050265</td>
+      <td>0.408730</td>
+      <td>0.146825</td>
+      <td>0.284061</td>
+      <td>0.127646</td>
+      <td>0.09127</td>
+      <td>0.158399</td>
+      <td>0.436839</td>
+      <td>0.333664</td>
+      <td>0.098545</td>
+      <td>4.063492</td>
     </tr>
     <tr>
       <th>std</th>
-      <td>418.923936</td>
-      <td>8.434395</td>
-      <td>208.477255</td>
-      <td>61.475036</td>
-      <td>1353.101803</td>
-      <td>30.129956</td>
-      <td>23.095691</td>
-      <td>45.554904</td>
-      <td>1102.234259</td>
-      <td>0.425785</td>
+      <td>423.287169</td>
+      <td>8.426834</td>
+      <td>223.377780</td>
+      <td>63.847319</td>
+      <td>1312.019492</td>
+      <td>31.456746</td>
+      <td>22.526782</td>
+      <td>46.275802</td>
+      <td>1081.728307</td>
+      <td>0.424761</td>
       <td>...</td>
-      <td>0.472179</td>
-      <td>0.230378</td>
-      <td>0.0</td>
-      <td>0.260314</td>
-      <td>0.018185</td>
-      <td>0.285679</td>
-      <td>0.208727</td>
-      <td>0.031487</td>
-      <td>0.201370</td>
-      <td>2.010423</td>
+      <td>0.491681</td>
+      <td>0.353990</td>
+      <td>0.451041</td>
+      <td>0.333750</td>
+      <td>0.28804</td>
+      <td>0.365176</td>
+      <td>0.496077</td>
+      <td>0.471599</td>
+      <td>0.298099</td>
+      <td>1.989204</td>
     </tr>
     <tr>
       <th>min</th>
-      <td>1863.000000</td>
+      <td>1874.000000</td>
+      <td>1.000000</td>
       <td>0.000000</td>
-      <td>0.000000</td>
-      <td>-114.000000</td>
-      <td>0.000000</td>
-      <td>80.000000</td>
-      <td>113.000000</td>
-      <td>0.000000</td>
+      <td>-103.000000</td>
       <td>30.000000</td>
+      <td>0.000000</td>
+      <td>103.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.0</td>
       <td>0.000000</td>
       <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
@@ -1792,22 +2026,22 @@ display(dev_data_df.describe())
     </tr>
     <tr>
       <th>25%</th>
-      <td>2379.000000</td>
+      <td>2369.750000</td>
       <td>10.000000</td>
       <td>67.000000</td>
       <td>5.000000</td>
       <td>750.000000</td>
-      <td>196.000000</td>
-      <td>206.000000</td>
+      <td>195.000000</td>
+      <td>207.000000</td>
       <td>106.000000</td>
-      <td>743.000000</td>
+      <td>726.000000</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.0</td>
       <td>0.000000</td>
       <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
@@ -1816,22 +2050,22 @@ display(dev_data_df.describe())
     </tr>
     <tr>
       <th>50%</th>
-      <td>2753.000000</td>
+      <td>2738.500000</td>
       <td>16.000000</td>
-      <td>182.000000</td>
-      <td>34.000000</td>
-      <td>1296.000000</td>
-      <td>220.000000</td>
+      <td>175.000000</td>
+      <td>33.000000</td>
+      <td>1320.000000</td>
+      <td>219.000000</td>
       <td>222.000000</td>
-      <td>138.000000</td>
-      <td>1245.000000</td>
+      <td>139.000000</td>
+      <td>1216.000000</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.0</td>
       <td>0.000000</td>
       <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
@@ -1840,46 +2074,46 @@ display(dev_data_df.describe())
     </tr>
     <tr>
       <th>75%</th>
-      <td>3119.000000</td>
-      <td>22.000000</td>
-      <td>335.000000</td>
-      <td>82.000000</td>
-      <td>2278.250000</td>
+      <td>3101.000000</td>
+      <td>23.000000</td>
+      <td>331.000000</td>
+      <td>80.000000</td>
+      <td>2255.000000</td>
       <td>235.000000</td>
       <td>235.000000</td>
-      <td>166.000000</td>
-      <td>2012.000000</td>
+      <td>168.000000</td>
+      <td>1951.000000</td>
       <td>0.000000</td>
       <td>...</td>
       <td>1.000000</td>
       <td>0.000000</td>
-      <td>0.0</td>
+      <td>1.000000</td>
       <td>0.000000</td>
+      <td>0.00000</td>
       <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
       <td>0.000000</td>
       <td>6.000000</td>
     </tr>
     <tr>
       <th>max</th>
       <td>3849.000000</td>
-      <td>46.000000</td>
-      <td>1213.000000</td>
-      <td>547.000000</td>
-      <td>6836.000000</td>
+      <td>52.000000</td>
+      <td>1294.000000</td>
+      <td>411.000000</td>
+      <td>6297.000000</td>
       <td>254.000000</td>
       <td>254.000000</td>
       <td>248.000000</td>
-      <td>6853.000000</td>
+      <td>6723.000000</td>
       <td>1.000000</td>
       <td>...</td>
       <td>1.000000</td>
       <td>1.000000</td>
-      <td>0.0</td>
       <td>1.000000</td>
       <td>1.000000</td>
+      <td>1.00000</td>
       <td>1.000000</td>
       <td>1.000000</td>
       <td>1.000000</td>
@@ -1888,11 +2122,9 @@ display(dev_data_df.describe())
     </tr>
   </tbody>
 </table>
-<p>8 rows × 52 columns</p>
+<p>8 rows × 29 columns</p>
 </div>
 
-
-Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
 
 
 ```python
@@ -1908,8 +2140,8 @@ print(train_data.shape)
 print(dev_data.shape)
 ```
 
-    (12096, 51)
-    (3024, 51)
+    (12096, 28)
+    (3024, 28)
 
 
 
@@ -1925,17 +2157,16 @@ train_data.columns
            'Hillshade_9am', 'Hillshade_Noon', 'Hillshade_3pm',
            'Horizontal_Distance_To_Fire_Points', 'Wilderness_Area1',
            'Wilderness_Area2', 'Wilderness_Area3', 'Wilderness_Area4', 'asp_ew',
-           'asp_ns', 'aquolls', 'borohemists', 'bross', 'bullwark', 'catamount',
-           'cathedral', 'como', 'cryaquepts', 'cryaquolls', 'cryoborolis',
-           'cryorthents', 'cryumbrepts', 'extremely_bouldery', 'extremely_stony',
-           'gateview', 'gothic', 'granile', 'haploborolis', 'legault', 'leighcan',
-           'limber', 'moran', 'pachic_argiborolis', 'ratake', 'rock_land',
-           'rock_outcrop', 'rogert', 'rubbly', 'stony', 'supervisor',
-           'till_substratum', 'troutville', 'vanet', 'very_stony', 'warm',
-           'wetmore'],
+           'asp_ns', 'bullwark', 'catamount', 'como', 'cryaquolls',
+           'extremely_stony', 'legault', 'leighcan', 'moran', 'ratake',
+           'rock_land', 'rock_outcrop', 'rubbly', 'vanet'],
           dtype='object')
 
 
+
+##### Normalize the numeric data
+
+Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
 
 
 ```python
@@ -1957,8 +2188,8 @@ print(dev_data.shape)
 
 ```
 
-    (12096, 51)
-    (3024, 51)
+    (12096, 28)
+    (3024, 28)
 
 
 
@@ -1967,19 +2198,19 @@ print(dev_data.shape)
 print(train_data.shape, dev_data.shape)
 ```
 
-    (12096, 51) (3024, 51)
+    (12096, 28) (3024, 28)
 
 
 
 ```python
 # Explore and confirm the shape of the data
 print("Training data shape: {0} Training labels shape: {1}".format(train_data.shape, train_labels.shape))
-print("Dev data shape: {0} Dev labels shape: {1}".format(dev_data.shape, dev_data.shape))
+print("Dev data shape: {0} Dev labels shape: {1}".format(dev_data.shape, dev_labels.shape))
 print("Test data shape: ", test_data.shape)
 ```
 
-    Training data shape: (12096, 51) Training labels shape: (12096,)
-    Dev data shape: (3024, 51) Dev labels shape: (3024, 51)
+    Training data shape: (12096, 28) Training labels shape: (12096,)
+    Dev data shape: (3024, 28) Dev labels shape: (3024,)
     Test data shape:  (565892, 54)
 
 
@@ -2021,54 +2252,30 @@ dev_data.head()
       <th>Horizontal_Distance_To_Fire_Points</th>
       <th>Wilderness_Area1</th>
       <th>...</th>
-      <th>rogert</th>
+      <th>cryaquolls</th>
+      <th>extremely_stony</th>
+      <th>legault</th>
+      <th>leighcan</th>
+      <th>moran</th>
+      <th>ratake</th>
+      <th>rock_land</th>
+      <th>rock_outcrop</th>
       <th>rubbly</th>
-      <th>stony</th>
-      <th>supervisor</th>
-      <th>till_substratum</th>
-      <th>troutville</th>
       <th>vanet</th>
-      <th>very_stony</th>
-      <th>warm</th>
-      <th>wetmore</th>
     </tr>
   </thead>
   <tbody>
     <tr>
-      <th>2</th>
-      <td>0.132036</td>
-      <td>-0.886416</td>
-      <td>0.198141</td>
-      <td>0.234305</td>
-      <td>1.112855</td>
-      <td>0.695922</td>
-      <td>0.832257</td>
-      <td>-0.005489</td>
-      <td>4.195438</td>
-      <td>1</td>
-      <td>...</td>
-      <td>0</td>
-      <td>0</td>
-      <td>1</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>-0.368725</td>
-      <td>-1.713957</td>
-      <td>-0.348273</td>
-      <td>-0.844593</td>
-      <td>-1.003285</td>
-      <td>0.239420</td>
-      <td>0.656250</td>
-      <td>0.320750</td>
-      <td>4.241829</td>
+      <th>14</th>
+      <td>-0.596573</td>
+      <td>-1.473291</td>
+      <td>-0.768752</td>
+      <td>-0.770459</td>
+      <td>-0.785047</td>
+      <td>0.366210</td>
+      <td>0.917771</td>
+      <td>0.350240</td>
+      <td>3.696588</td>
       <td>1</td>
       <td>...</td>
       <td>0</td>
@@ -2083,21 +2290,69 @@ dev_data.head()
       <td>0</td>
     </tr>
     <tr>
-      <th>7</th>
-      <td>-0.344765</td>
-      <td>-1.477517</td>
-      <td>0.036592</td>
-      <td>-0.713818</td>
-      <td>-0.865194</td>
-      <td>0.304634</td>
-      <td>0.480243</td>
-      <td>0.190254</td>
-      <td>4.292768</td>
+      <th>28</th>
+      <td>0.143384</td>
+      <td>-1.827890</td>
+      <td>-0.066893</td>
+      <td>-0.341154</td>
+      <td>1.470480</td>
+      <td>0.234329</td>
+      <td>0.830320</td>
+      <td>0.415744</td>
+      <td>3.735525</td>
       <td>1</td>
       <td>...</td>
       <td>0</td>
       <td>0</td>
+      <td>1</td>
       <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>-0.029593</td>
+      <td>0.890698</td>
+      <td>-0.478327</td>
+      <td>0.038616</td>
+      <td>1.177622</td>
+      <td>1.322345</td>
+      <td>-0.393991</td>
+      <td>-1.396538</td>
+      <td>4.088676</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>0.357202</td>
+      <td>0.299700</td>
+      <td>0.078320</td>
+      <td>-0.506271</td>
+      <td>2.621581</td>
+      <td>0.267299</td>
+      <td>-1.049872</td>
+      <td>-0.763331</td>
+      <td>2.351897</td>
+      <td>1</td>
+      <td>...</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
@@ -2107,56 +2362,32 @@ dev_data.head()
       <td>0</td>
     </tr>
     <tr>
-      <th>11</th>
-      <td>0.328506</td>
-      <td>-0.649976</td>
-      <td>0.687537</td>
-      <td>-0.403226</td>
-      <td>2.685734</td>
-      <td>0.695922</td>
-      <td>0.920261</td>
-      <td>0.016260</td>
-      <td>2.312505</td>
+      <th>44</th>
+      <td>-0.176143</td>
+      <td>-1.355092</td>
+      <td>-0.633220</td>
+      <td>-0.456736</td>
+      <td>-0.042741</td>
+      <td>0.531061</td>
+      <td>0.742869</td>
+      <td>0.131893</td>
+      <td>4.553206</td>
       <td>1</td>
       <td>...</td>
       <td>0</td>
       <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>-0.335181</td>
-      <td>-1.122857</td>
-      <td>-0.362527</td>
-      <td>-0.076287</td>
-      <td>-0.714962</td>
-      <td>0.011168</td>
-      <td>1.228273</td>
-      <td>0.755737</td>
-      <td>4.277305</td>
-      <td>1</td>
-      <td>...</td>
       <td>1</td>
       <td>0</td>
       <td>0</td>
       <td>0</td>
-      <td>0</td>
-      <td>0</td>
-      <td>0</td>
       <td>1</td>
+      <td>0</td>
       <td>0</td>
       <td>0</td>
     </tr>
   </tbody>
 </table>
-<p>5 rows × 51 columns</p>
+<p>5 rows × 28 columns</p>
 </div>
 
 
@@ -2183,31 +2414,31 @@ for num_trees in num_trees_list:
     RandomForest(num_trees)
 ```
 
-    Random Forest Performance for 1 trees: 0.6173941798941799
-    Random Forest Performance for 3 trees: 0.7083333333333334
-    Random Forest Performance for 5 trees: 0.7083333333333334
-    Random Forest Performance for 10 trees: 0.7430555555555556
-    Random Forest Performance for 100 trees: 0.7509920634920635
+    Random Forest Performance for 1 trees: 0.6418650793650794
+    Random Forest Performance for 3 trees: 0.7195767195767195
+    Random Forest Performance for 5 trees: 0.7255291005291006
+    Random Forest Performance for 10 trees: 0.7447089947089947
+    Random Forest Performance for 100 trees: 0.7605820105820106
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_39_1.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_40_1.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_39_2.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_40_2.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_39_3.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_40_3.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_39_4.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_40_4.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_39_5.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_40_5.png)
 
 
 #### Naive Bayes (Bernoulli)
@@ -2234,14 +2465,14 @@ for alpha in alphas_list:
     NB(alpha)
 ```
 
-    BernoulliNB for alph = 0.01: accuracy = 0.6031746031746031
+    BernoulliNB for alph = 0.01: accuracy = 0.5773809523809523
     
     
     
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_41_1.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_42_1.png)
 
 
 #### K-Nearest Neighbors
@@ -2266,31 +2497,31 @@ for neigh in neigh_list:
     KNN(neigh)
 ```
 
-    KNN 1 neighbors : accuracy = 0.7496693121693122
-    KNN 2 neighbors : accuracy = 0.7235449735449735
-    KNN 4 neighbors : accuracy = 0.7321428571428571
-    KNN 7 neighbors : accuracy = 0.7314814814814815
-    KNN 10 neighbors : accuracy = 0.7291666666666666
+    KNN 1 neighbors : accuracy = 0.753968253968254
+    KNN 2 neighbors : accuracy = 0.7136243386243386
+    KNN 4 neighbors : accuracy = 0.7450396825396826
+    KNN 7 neighbors : accuracy = 0.7414021164021164
+    KNN 10 neighbors : accuracy = 0.7371031746031746
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_43_1.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_44_1.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_43_2.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_44_2.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_43_3.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_44_3.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_43_4.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_44_4.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_43_5.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_44_5.png)
 
 
 #### Multi-layer Perceptron
@@ -2314,13 +2545,6 @@ def MLP():
     
 MLP()
 ```
-
-    MLP accuracy =  0.8161375661375662
-
-
-    /opt/conda/lib/python3.7/site-packages/sklearn/neural_network/_multilayer_perceptron.py:571: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (300) reached and the optimization hasn't converged yet.
-      % self.max_iter, ConvergenceWarning)
-
 
 ### End matter
 
@@ -2351,30 +2575,6 @@ MLP()
 # Also archiving this bad boy
 !jupyter nbconvert clear-cut-solution.ipynb --to html --output="backups/clear-cut-solution"
 ```
-
-    [NbConvertApp] Converting notebook clear-cut-solution.ipynb to python
-    [NbConvertApp] Writing 17948 bytes to backups/clear-cut-solution.py
-    [NbConvertApp] Converting notebook clear-cut-solution.ipynb to markdown
-    [NbConvertApp] Support files will be in backups/clear-cut-solution_files/
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Writing 52268 bytes to backups/clear-cut-solution.md
-    [NbConvertApp] Converting notebook clear-cut-solution.ipynb to html
-    [NbConvertApp] Writing 2279306 bytes to backups/clear-cut-solution.html
-
 
 
 ```python
