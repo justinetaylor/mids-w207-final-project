@@ -4,7 +4,7 @@
 # # Forest Cover Type Prediction
 # #### Team: Clear-Cut Solution: Kevin Martin, Yang Jing, Justine Schabel
 
-# In[130]:
+# In[1]:
 
 
 # This tells matplotlib not to try opening a new window for each plot.
@@ -25,26 +25,214 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import StandardScaler
 
 
 # ## Data Engineering
 
 # ### Load Data
 
-# In[131]:
+# In[2]:
 
 
 # Read in training data 
 train_df = pd.read_csv("data/train.csv")
-test_df = pd.read_csv("data/test.csv", nrows=30000)
+test_df = pd.read_csv("data/test.csv")
 
 
 # ### Initial Data Exploration
 # 
-# First, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
+# First, we check the data attributes, quality and shape.
 
-# In[132]:
+# In[3]:
+
+
+# Examine shape 
+print(train_df.shape)
+
+# Briefly examine feature attributes for the training data 
+train_df.describe()
+
+
+# In[4]:
+
+
+sns.distplot(train_df['Cover_Type'],rug=True)
+plt.show()
+
+
+# Here we can see that the training data has a somewhat uniform distribution of covertype and this tells us that our data set is balanced. 
+
+# In[5]:
+
+
+sns.violinplot(x=train_df['Cover_Type'],y=train_df['Elevation'])
+plt.show()
+
+
+# Here, we can see there is a relationship between the cover type and elevation. 
+
+# In[6]:
+
+
+# get NA values
+
+print("There are {} NA values in the training data".format(train_df.isna().sum().sum()))
+print("There are {} NA values in the test data".format(train_df.isna().sum().sum()))
+    # `.isna()` returns a df with bools the first `.sum()` returns series, second is int 
+print()
+print("There are {} values in the training data".format(train_df.count()[0]))
+print("There are {} values in the test data".format(test_df.count()[0]))
+
+
+# No null values in the dataset. Also noted the "aspect" variable has a value between 0 and 359. This is expressed in degrees, compared to "true north". Will conver this ino sine(EW) and cosine(NS) values. 
+
+# ### Feature Engineering 1
+# Now we'll transform the "Aspect" into cosine and sine values to improve the representation of directions. 
+
+# In[7]:
+
+
+#split the aspect into a N/S and E/W unit vector
+train_df["asp_ew"] = np.sin(train_df["Aspect"])
+train_df["asp_ns"] = np.cos(train_df["Aspect"])
+
+
+train_df["asp_ew"]**2 + train_df["asp_ns"]**2
+
+train_df.hist(column = "asp_ew")
+train_df.hist(column = "asp_ns")
+train_df.hist(column = "Aspect")
+
+df_circle = train_df[["asp_ew","asp_ns"]]
+df_circle["jitter"] = np.random.rand(train_df.shape[0])*.6 +1
+df_circle["asp_ew_jit"] = df_circle["asp_ew"] * df_circle["jitter"]
+df_circle["asp_ns_jit"] = df_circle["asp_ns"] * df_circle["jitter"]
+
+df_circle.plot.scatter("asp_ew_jit","asp_ns_jit",alpha=0.04)
+df_circle.head()
+
+
+# In[8]:
+
+
+#drop Aspect column
+train_df.drop(columns=["Aspect"], inplace=True)
+
+
+# Now, we'll isolate and explore the distribution of soil types. 
+
+# In[9]:
+
+
+# Isolate soil type column names
+soil_df = train_df[["Id",'Soil_Type1', 'Soil_Type2', 'Soil_Type3',
+       'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type7', 'Soil_Type8',
+       'Soil_Type9', 'Soil_Type10', 'Soil_Type11', 'Soil_Type12',
+       'Soil_Type13', 'Soil_Type14', 'Soil_Type15', 'Soil_Type16',
+       'Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
+       'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24',
+       'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
+       'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
+       'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36',
+       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40']]
+
+# Now we convert the soil type columns back into one column with values as the "soil type"
+soil_df_unpivoted = soil_df.melt(id_vars="Id",var_name="soil_type",value_name="yes")
+mask1 = soil_df_unpivoted["yes"] ==1 #only keep rows of where the "soil type" is "yes"
+soil_df_unpivoted = soil_df_unpivoted[mask1]
+
+
+# Examine the fequencies of soil types
+soil_df_unpivoted["soil_type"].value_counts().to_frame() 
+
+# Histogram of soil types 
+plt.figure(figsize=(24,6))
+plt.hist(soil_df_unpivoted["soil_type"],bins=40)
+plt.xticks(rotation=90)
+plt.show()
+
+
+# As we can see in the histogram above, there is an uneven distribution of occurances of soil types.
+
+# In[10]:
+
+
+# Explore correlations between features
+train_corr=train_df.corr()
+# Rank correlations with "cover type"
+train_corr['Cover_Type'].abs().sort_values(ascending=False)
+
+
+# In[11]:
+
+
+# Visualize the distribution of soil type and "cover type"
+st_list = ['Soil_Type1', 'Soil_Type2', 'Soil_Type3',
+       'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type8',
+       'Soil_Type9', 'Soil_Type10', 'Soil_Type11', 'Soil_Type12',
+       'Soil_Type13', 'Soil_Type14', 'Soil_Type16','Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
+       'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24',
+       'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
+       'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
+       'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36',
+       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40']
+
+fig, axes = plt.subplots(19,2,figsize=(24,120))
+for i in range(len(st_list)):
+    sns.violinplot(y=train_df['Cover_Type'],x=train_df[st_list[i]], ax=axes[i//2,i%2])
+plt.show()
+
+
+# Here we can examine the relationship between soil type and cover type for each soil type. # TODO: Discuss more
+
+# Now, we'll isolate and explore the distribution of wilderness types. 
+
+# In[12]:
+
+
+wilderness_list =['Wilderness_Area1','Wilderness_Area2','Wilderness_Area3','Wilderness_Area4']
+
+# Visualize the distribution of wilderness area and "cover type"
+fig, axes = plt.subplots(2,2,figsize=(24,12))
+for i in range(4):
+    sns.violinplot(y=train_df['Cover_Type'],x=train_df[wilderness_list[i]], ax=axes[i//2,i%2])
+plt.show()
+
+
+# ### Feature Engineering 2
+# 
+# Now we'll drop soil types that don't exist in the training set. Then we will combine soil types 35, 38, 39 and 40 because they have a very similar distribution. 
+
+# In[13]:
+
+
+# Remove soil type 7 and 15 due to no data
+train_df.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
+
+# Remove soil type 19, 37, 34, 21, 27,36,9, 28,8,25 due to no limited data - TODO: should we be dropping these? 
+train_df.drop(columns=["Soil_Type19", "Soil_Type37","Soil_Type34", "Soil_Type21","Soil_Type27", "Soil_Type36","Soil_Type9", "Soil_Type28","Soil_Type8", "Soil_Type25"], inplace=True)
+
+# Combine soil type 35,38,39, 40
+train_df["soil_type35383940"] = train_df["Soil_Type38"] +  train_df["Soil_Type39"] + train_df["Soil_Type40"] +  train_df["Soil_Type35"]
+train_df.drop(columns=["Soil_Type35","Soil_Type38", "Soil_Type39",'Soil_Type40'], inplace=True)
+
+# Check shape is as expected
+print(train_df.shape)
+
+
+# In[14]:
+
+
+#drop Id column as it is not a meaningful feature.
+train_df.drop(columns=["Id"],inplace=True)
+test_df.drop(columns=["Id"],inplace=True)
+
+
+# ### Additional Data Mungling
+# 
+# Then, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
+
+# In[15]:
 
 
 # Split training data (labeled) into 80% training and 20% dev) and randomly sample 
@@ -59,207 +247,9 @@ print(dev_data_df.shape)
 training_data.describe()
 
 
-# Now, we'll isolate and explore the distribution of soil types. 
-
-# In[133]:
-
-
-# Isolate soil type column names
-soil_df = training_data[["Id",'Soil_Type1', 'Soil_Type2', 'Soil_Type3',
-       'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type7', 'Soil_Type8',
-       'Soil_Type9', 'Soil_Type10', 'Soil_Type11', 'Soil_Type12',
-       'Soil_Type13', 'Soil_Type14', 'Soil_Type15', 'Soil_Type16',
-       'Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
-       'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24',
-       'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
-       'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
-       'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36',
-       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40']]
-
-# TODO: What are these doing? 
-soil_df_unpivoted = soil_df.melt(id_vars="Id",var_name="soil_type",value_name="yes")
-mask1 = soil_df_unpivoted["yes"] ==1
-soil_df_unpivoted = soil_df_unpivoted[mask1]
-
-
-# Examine the fequencies of soil types
-soil_df_unpivoted["soil_type"].value_counts().to_frame()
-
-# Histogram of soil types 
-plt.figure(figsize=(24,6))
-plt.hist(soil_df_unpivoted["soil_type"],bins=40)
-plt.xticks(rotation=90)
-plt.show()
-
-
-# As we can see in the histogram above, there is an uneven distribution of occurances of soil types.
-
-# In[134]:
-
-
-sns.violinplot(x=training_data['Cover_Type'],y=training_data['Elevation'])
-plt.show()
-
-
-# Here, we can see there is a relationship between the cover type and elevation. 
-
-# In[ ]:
-
-
-sns.displot(training_data['Cover_Type'],rug=True)
-plt.show()
-
-
-# Here we can see that the training data has a somewhat uniform distribution of covertype and this tells us that our data set is balanced. 
-
-# In[ ]:
-
-
-# Explore correlations between features
-train_corr=training_data.corr()
-# Rank correlations with "cover type"
-train_corr['Cover_Type'].abs().sort_values(ascending=False)
-st_list = ['Soil_Type1', 'Soil_Type2', 'Soil_Type3',
-       'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type8',
-       'Soil_Type9', 'Soil_Type10', 'Soil_Type11', 'Soil_Type12',
-       'Soil_Type13', 'Soil_Type14', 'Soil_Type16','Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
-       'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24',
-       'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
-       'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
-       'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36',
-       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40']
-# Visualize the distribution of soil type and "cover type"
-fig, axes = plt.subplots(19,2,figsize=(24,120))
-for i in range(len(st_list)):
-    sns.violinplot(y=train_df['Cover_Type'],x=training_data[st_list[i]], ax=axes[i//2,i%2])
-plt.show()
-
-
-# Here we can examine the relationship between soil type and cover type for each soil type. # TODO: Discuss more
-
-# Now, we'll isolate and explore the distribution of wilderness types. 
-
-# In[ ]:
-
-
-wilderness_list =['Wilderness_Area1','Wilderness_Area2','Wilderness_Area3','Wilderness_Area4']
-
-# Visualize the distribution of wilderness area and "cover type"
-fig, axes = plt.subplots(2,2,figsize=(24,12))
-for i in range(4):
-    sns.violinplot(y=training_data['Cover_Type'],x=training_data[wilderness_list[i]], ax=axes[i//2,i%2])
-plt.show()
-
-
-# ### Feature Engineering
-# 
-# Now we'll begin modifying both the train and dev data based on our exploratory data analysis. First, we'll drop soil types that don't exist in the training set. Then we will combine soil types 35, 38, 39 and 40 because they have a very similar distribution. 
-
-# In[ ]:
-
-
-# Remove soil type 7 and 15 due to no data
-training_data.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
-dev_data_df.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
-
-# Remove soil type 19, 37, 34, 21, 27,36,9, 28,8,25 due to no limited data - TODO: should we be dropping these? 
-training_data.drop(columns=["Soil_Type19", "Soil_Type37","Soil_Type34", "Soil_Type21","Soil_Type27", "Soil_Type36","Soil_Type9", "Soil_Type28","Soil_Type8", "Soil_Type25"], inplace=True)
-dev_data_df.drop(columns=["Soil_Type19", "Soil_Type37","Soil_Type34", "Soil_Type21","Soil_Type27", "Soil_Type36","Soil_Type9", "Soil_Type28","Soil_Type8", "Soil_Type25"], inplace=True)
-
-# Combine soil type 35,38,39, 40
-training_data["soil_type35383940"] = training_data["Soil_Type38"] +  training_data["Soil_Type39"] + training_data["Soil_Type40"] +  training_data["Soil_Type35"]
-training_data.drop(columns=["Soil_Type35","Soil_Type38", "Soil_Type39",'Soil_Type40'], inplace=True)
-dev_data_df["soil_type35383940"] = dev_data_df["Soil_Type38"] +  dev_data_df["Soil_Type39"] + dev_data_df["Soil_Type40"] +  dev_data_df["Soil_Type35"]
-dev_data_df.drop(columns=["Soil_Type35","Soil_Type38", "Soil_Type39",'Soil_Type40'], inplace=True)
-
-# Check shape is as expected
-print(training_data.shape)
-print(dev_data_df.shape)
-
-
 # Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
 
-# In[ ]:
-
-
-# Collect numeric feature column names - so we can easily access these columns when modifying them 
-num_cols = ['Elevation', 'Aspect', 'Slope',
-       'Horizontal_Distance_To_Hydrology', 'Vertical_Distance_To_Hydrology',
-       'Horizontal_Distance_To_Roadways', 'Hillshade_9am', 'Hillshade_Noon',
-       'Hillshade_3pm', 'Horizontal_Distance_To_Fire_Points']
-
-# Normalize features using the standard scaler [training data]
-# scaler = StandardScaler()
-# num_train_df = pd.DataFrame(scaler.fit_transform(training_data[num_cols]), columns=num_cols)
-# num_train_df.head()
-# training_data.drop(columns=num_cols, inplace=True)
-# print(training_data.shape)
-# temp = pd.concat([training_data, num_train_df], axis=1)
-# print(temp.shape)
-# temp2 = training_data.merge(num_train_df, left_index=True, right_index=True)
-# print(temp2.shape)
-# # Standardize dev data using the training data original mean and standard deviation
-# dev_data_minus_mean = dev_data_df[num_cols].sub(scaler.mean_, axis='columns')
-# dev_data_standardized = dev_data_minus_mean.div(scaler.var_**(1/2)+1e-05, axis='columns')
-# # Drop original numeric columns (unstandardized)
-# dev_data_df.drop(columns=num_cols, inplace=True)
-# # Replace with standardized columns
-# dev_data_df = dev_data_df.merge(dev_data_standardized, left_index=True, right_index=True, how='left')
-# print(dev_data_df.shape)
-
-
-# In[ ]:
-
-
-"""
-Normalize Manually:
-- Subtract mean and divide by standard deviation (feature wise) using training data mean/std
-- To avoid dividing by 0, add 1e-10 to the standard deviation
-- Take the mean on axis 0 (feature wise)
-- Reshape it to be a column vector
-- Transpose it so we can subtract properly
-""" 
-train_mean = training_data[num_cols].mean(axis=0)
-train_std = training_data[num_cols].std(axis=0)
-
-# Examine mean and std of training data features
-print("Mean by Feature:\n", train_mean)
-print("\nStandard deviation by Features:\n", train_std)
-
-
-# In[ ]:
-
-
-train_mean = train_mean.values.reshape(-1,1).transpose()
-train_std = train_std.values.reshape(-1,1).transpose()
-
-
-# In[ ]:
-
-
-# Double check shape
-print(train_mean.shape, train_std.shape)
-
-
-# In[ ]:
-
-
-training_data[num_cols] = training_data[num_cols].sub(train_mean, axis=1)
-training_data[num_cols] = training_data[num_cols].divide(train_std,axis=1)
-
-dev_data_df[num_cols] = dev_data_df[num_cols].sub(train_mean, axis=1)
-dev_data_df[num_cols] = dev_data_df[num_cols].divide(train_std,axis=1)
-
-
-# In[ ]:
-
-
-training_data.head()
-
-
-# Next we will split the data and the labels. 
-
-# In[ ]:
+# In[16]:
 
 
 # Split into data and labels
@@ -274,7 +264,39 @@ print(train_data.shape)
 print(dev_data.shape)
 
 
-# In[ ]:
+# In[17]:
+
+
+train_data.columns
+
+
+# In[18]:
+
+
+# Collect numeric feature column names - so we can easily access these columns when modifying them 
+num_cols = ['Elevation', 'Slope',
+       'Horizontal_Distance_To_Hydrology', 'Vertical_Distance_To_Hydrology',
+       'Horizontal_Distance_To_Roadways', 'Hillshade_9am', 'Hillshade_Noon',
+       'Hillshade_3pm', 'Horizontal_Distance_To_Fire_Points']
+
+# Normalize features using the standard scaler [training data]
+scaler = StandardScaler()
+norm = scaler.fit(train_data[num_cols])
+train_data[num_cols] = norm.transform(train_data[num_cols])
+print(train_data.shape)
+# Normalize features using the standard scaler [dev data]
+dev_data[num_cols] = norm.transform(dev_data[num_cols])
+print(dev_data.shape)
+
+
+# In[19]:
+
+
+# Double check shape
+print(train_data.shape, dev_data.shape)
+
+
+# In[20]:
 
 
 # Explore and confirm the shape of the data
@@ -283,17 +305,17 @@ print("Dev data shape: {0} Dev labels shape: {1}".format(dev_data.shape, dev_dat
 print("Test data shape: ", test_data.shape)
 
 
-# In[ ]:
+# In[21]:
 
 
 # Examine Training Data 
-train_data.head()
+dev_data.head()
 
 
 # ## Models
 # #### Random Forest
 
-# In[ ]:
+# In[22]:
 
 
 # Try a random forest - before any data cleaning 
@@ -315,7 +337,7 @@ for num_trees in num_trees_list:
 
 # #### Naive Bayes (Bernoulli)
 
-# In[ ]:
+# In[23]:
 
 
 # Try Naive Bayes - before any data cleaning 
