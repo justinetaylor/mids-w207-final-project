@@ -201,23 +201,23 @@ plt.show()
 
 # ### Feature Engineering 2
 # 
-# Now we'll drop soil types that don't exist in the training set. Then we will combine soil types 35, 38, 39 and 40 because they have a very similar distribution. 
+# I'm going to hold off on dropping any soil types and just transform them to the new type
 
 # In[13]:
 
 
-# Remove soil type 7 and 15 due to no data
-train_df.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
+# # Remove soil type 7 and 15 due to no data
+# train_df.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
 
-# Remove soil type 19, 37, 34, 21, 27,36,9, 28,8,25 due to no limited data - TODO: should we be dropping these? 
-train_df.drop(columns=["Soil_Type19", "Soil_Type37","Soil_Type34", "Soil_Type21","Soil_Type27", "Soil_Type36","Soil_Type9", "Soil_Type28","Soil_Type8", "Soil_Type25"], inplace=True)
+# # Remove soil type 19, 37, 34, 21, 27,36,9, 28,8,25 due to no limited data - TODO: should we be dropping these? 
+# train_df.drop(columns=["Soil_Type19", "Soil_Type37","Soil_Type34", "Soil_Type21","Soil_Type27", "Soil_Type36","Soil_Type9", "Soil_Type28","Soil_Type8", "Soil_Type25"], inplace=True)
 
-# Combine soil type 35,38,39, 40
-train_df["soil_type35383940"] = train_df["Soil_Type38"] +  train_df["Soil_Type39"] + train_df["Soil_Type40"] +  train_df["Soil_Type35"]
-train_df.drop(columns=["Soil_Type35","Soil_Type38", "Soil_Type39",'Soil_Type40'], inplace=True)
+# # Combine soil type 35,38,39, 40
+# train_df["soil_type35383940"] = train_df["Soil_Type38"] +  train_df["Soil_Type39"] + train_df["Soil_Type40"] +  train_df["Soil_Type35"]
+# train_df.drop(columns=["Soil_Type35","Soil_Type38", "Soil_Type39",'Soil_Type40'], inplace=True)
 
-# Check shape is as expected
-print(train_df.shape)
+# # Check shape is as expected
+# print(train_df.shape)
 
 
 # In[14]:
@@ -228,11 +228,106 @@ train_df.drop(columns=["Id"],inplace=True)
 test_df.drop(columns=["Id"],inplace=True)
 
 
+# ## Soil Type
+# 
+# Right now we have 40 composite types of soil. We are going to re-categorize those into their component parts with a 1 for if a component is present. 0 if they are not present. 
+# 
+# #### Adjustments to the data 
+# 
+# Looking throught the data, we see several areas where the data can be cleaned. The USDA which is the cabinet department which oversees the forest service, publishes a guide on Soil Taxonomy. (https://www.nrcs.usda.gov/wps/portal/nrcs/detail/soils/home/?cid=nrcs142p2_053577). This guide was very helpful in interpreting several areas where the data can be trimmed down. 
+# 
+# * Filler words
+#   * "Family / "families" denotes a larger soil group such as Leighcan or Cryaquolls, but these words themselves don't actually carry any information about the group. 
+#   * "complex" is another word that appears in the docuement but doesn't actually convey any information itself
+#   * "typic" just means that a soil fits into the most general subgroup of the family listed. In the context of the soil types listed, it is useless because only a few soil types list it, and those that don't list it don't list a more specific subgroup that they are a part of. So, they would also generally be assumed to be typic (see guide to soil taxonomy linked above.)
+# * Cryaquolis and aquolis types don't exist
+#   * Looking through the guide to soil taxonomy, there is no such type as cryaquolis and aquolis. The simplest interpretation is that these are typos. Cryaquolls and aquolls do exist (see link above). I will change the words accordingly.
+#   
+# #### Possible future work
+# 
+# * See if the "very/extremely" qualifiers on stony should be removed. Do they mean the same thing?
+# * See if changing "rubbly", "bouldery", "stoney" to all one indicator would be better. Do they all mean the same thing?
+
+# In[30]:
+
+
+#### Analyze frequqncy that imporant types of soil show up ####
+
+import re  #regexes to work with strings
+from sklearn.feature_extraction.text import CountVectorizer #count up occurences of words
+import numpy as np
+
+# pull in the text of the soil types
+with open("km_EDA/soil_raw.txt") as f:
+    s_raw = f.read()
+
+# lowercase everything to make it easier to work with
+s = s_raw.lower()
+
+# take out punctuation and numbers.
+pattern = re.compile(r"[\d\.,-]")
+s = pattern.sub(" ",s)
+
+# take out filler words "family","families","complex"
+pattern = re.compile(r"(family|families|complex|typic)")
+s = pattern.sub(" ",s)
+
+# replace cryaquolis/aquolis (doesn't exist) with cryaquolls/aquolls
+pattern = re.compile(r"aquolis")
+s = pattern.sub("aquolls",s)
+
+# the "unspecified" row doesn't contain any data
+pattern = re.compile(r"unspecified in the usfs soil and elu survey")
+s = pattern.sub(" ",s)
+
+#replace the space in words separated by a single space with an underscore
+pattern = re.compile(r"(\w+) (\w+)")
+s = pattern.sub(r"\1_\2",s)
+
+
+
+### COUNT AND TRANSFORM THE DATA ###
+cv = CountVectorizer()
+# create the counts matrix based on word occurences in our processed soil types
+counts = cv.fit_transform(s.split("\n"))
+# we can use the counts as a transformation matrix to convert to our refined categories
+xform = counts.toarray()
+
+## Explanation of xform
+    # It turns out that multiplying our original soil matrix by xform using matrix mutiplication
+    # will just give us a matrix that has been converted to the new feature space. 
+
+# Grab out the new features (that are replacing s_01 thru s_40)
+new_cats = cv.get_feature_names()
+print("-- New Feature Names --")
+print(new_cats,"\n")
+
+# get original soil names
+og_soil_col_names = [("Soil_Type{:d}".format(ii+1)) for ii in range(40)]
+
+# get columns containing soil information from our dataframe.
+soil_cols = np.array(train_df[og_soil_col_names])
+
+# transform the soil features. Put them into a dataframe.
+trans_soil = np.matmul(soil_cols,xform)
+trans_soil_df = pd.DataFrame(data = trans_soil, columns = new_cats)
+display(trans_soil_df)
+
+# combine the new soil features with the existing freatures in a single df
+df_new = train_df.drop(columns=og_soil_col_names)
+df_new = pd.concat([df_new, trans_soil_df],axis=1)
+df_new = df_new[[col for col in df_new if col not in ["Cover_Type"]]+["Cover_Type"]] #want cover type as last column
+display(df_new)
+
+# We'll just reassign the train_df here to be equal to df_new
+train_df = df_new
+
+
 # ### Additional Data Mungling
 # 
 # Then, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
 
-# In[15]:
+# In[31]:
 
 
 # Split training data (labeled) into 80% training and 20% dev) and randomly sample 
@@ -244,12 +339,13 @@ print(training_data.shape)
 print(dev_data_df.shape)
 
 # Briefly examine feature attributes for the training data 
-training_data.describe()
+display(training_data.describe())
+display(dev_data_df.describe())
 
 
 # Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
 
-# In[16]:
+# In[32]:
 
 
 # Split into data and labels
@@ -264,13 +360,13 @@ print(train_data.shape)
 print(dev_data.shape)
 
 
-# In[17]:
+# In[33]:
 
 
 train_data.columns
 
 
-# In[18]:
+# In[34]:
 
 
 # Collect numeric feature column names - so we can easily access these columns when modifying them 
@@ -289,14 +385,14 @@ dev_data[num_cols] = norm.transform(dev_data[num_cols])
 print(dev_data.shape)
 
 
-# In[19]:
+# In[35]:
 
 
 # Double check shape
 print(train_data.shape, dev_data.shape)
 
 
-# In[20]:
+# In[36]:
 
 
 # Explore and confirm the shape of the data
@@ -305,7 +401,7 @@ print("Dev data shape: {0} Dev labels shape: {1}".format(dev_data.shape, dev_dat
 print("Test data shape: ", test_data.shape)
 
 
-# In[21]:
+# In[37]:
 
 
 # Examine Training Data 
@@ -315,7 +411,7 @@ dev_data.head()
 # ## Models
 # #### Random Forest
 
-# In[22]:
+# In[38]:
 
 
 # Try a random forest - before any data cleaning 
@@ -337,7 +433,7 @@ for num_trees in num_trees_list:
 
 # #### Naive Bayes (Bernoulli)
 
-# In[23]:
+# In[39]:
 
 
 # Try Naive Bayes - before any data cleaning 
@@ -362,7 +458,7 @@ for alpha in alphas_list:
 
 # #### K-Nearest Neighbors
 
-# In[ ]:
+# In[40]:
 
 
 # Try K Nearest Neighbors - before any data cleaning 
@@ -385,7 +481,7 @@ for neigh in neigh_list:
 
 # #### Multi-layer Perceptron
 
-# In[ ]:
+# In[41]:
 
 
 # Try Multi-Layer Perceptron - before any data cleaning 
@@ -426,7 +522,7 @@ MLP()
 # 
 # *because sometimes you just want to look at the markdown or whatever real quick*
 
-# In[ ]:
+# In[27]:
 
 
 #Create a backup of the jupyter notebook in a format for where changes are easier to see.
