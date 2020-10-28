@@ -2546,6 +2546,13 @@ def MLP():
 MLP()
 ```
 
+    MLP accuracy =  0.8068783068783069
+
+
+    /opt/conda/lib/python3.7/site-packages/sklearn/neural_network/_multilayer_perceptron.py:571: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (300) reached and the optimization hasn't converged yet.
+      % self.max_iter, ConvergenceWarning)
+
+
 ### End matter
 
 #### Acknowledgements/Sources
@@ -2575,6 +2582,75 @@ MLP()
 # Also archiving this bad boy
 !jupyter nbconvert clear-cut-solution.ipynb --to html --output="backups/clear-cut-solution"
 ```
+
+    [NbConvertApp] Converting notebook clear-cut-solution.ipynb to python
+    Traceback (most recent call last):
+      File "/opt/conda/lib/python3.7/site-packages/nbformat/reader.py", line 14, in parse_json
+        nb_dict = json.loads(s, **kwargs)
+      File "/opt/conda/lib/python3.7/json/__init__.py", line 348, in loads
+        return _default_decoder.decode(s)
+      File "/opt/conda/lib/python3.7/json/decoder.py", line 337, in decode
+        obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+      File "/opt/conda/lib/python3.7/json/decoder.py", line 355, in raw_decode
+        raise JSONDecodeError("Expecting value", s, err.value) from None
+    json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+    
+    During handling of the above exception, another exception occurred:
+    
+    Traceback (most recent call last):
+      File "/opt/conda/bin/jupyter-nbconvert", line 11, in <module>
+        sys.exit(main())
+      File "/opt/conda/lib/python3.7/site-packages/jupyter_core/application.py", line 270, in launch_instance
+        return super(JupyterApp, cls).launch_instance(argv=argv, **kwargs)
+      File "/opt/conda/lib/python3.7/site-packages/traitlets/config/application.py", line 664, in launch_instance
+        app.start()
+      File "/opt/conda/lib/python3.7/site-packages/nbconvert/nbconvertapp.py", line 340, in start
+        self.convert_notebooks()
+      File "/opt/conda/lib/python3.7/site-packages/nbconvert/nbconvertapp.py", line 510, in convert_notebooks
+        self.convert_single_notebook(notebook_filename)
+      File "/opt/conda/lib/python3.7/site-packages/nbconvert/nbconvertapp.py", line 481, in convert_single_notebook
+        output, resources = self.export_single_notebook(notebook_filename, resources, input_buffer=input_buffer)
+      File "/opt/conda/lib/python3.7/site-packages/nbconvert/nbconvertapp.py", line 410, in export_single_notebook
+        output, resources = self.exporter.from_filename(notebook_filename, resources=resources)
+      File "/opt/conda/lib/python3.7/site-packages/nbconvert/exporters/exporter.py", line 179, in from_filename
+        return self.from_file(f, resources=resources, **kw)
+      File "/opt/conda/lib/python3.7/site-packages/nbconvert/exporters/exporter.py", line 197, in from_file
+        return self.from_notebook_node(nbformat.read(file_stream, as_version=4), resources=resources, **kw)
+      File "/opt/conda/lib/python3.7/site-packages/nbformat/__init__.py", line 143, in read
+        return reads(buf, as_version, **kwargs)
+      File "/opt/conda/lib/python3.7/site-packages/nbformat/__init__.py", line 73, in reads
+        nb = reader.reads(s, **kwargs)
+      File "/opt/conda/lib/python3.7/site-packages/nbformat/reader.py", line 58, in reads
+        nb_dict = parse_json(s, **kwargs)
+      File "/opt/conda/lib/python3.7/site-packages/nbformat/reader.py", line 17, in parse_json
+        raise NotJSONError(("Notebook does not appear to be JSON: %r" % s)[:77] + "...")
+    nbformat.reader.NotJSONError: Notebook does not appear to be JSON: ''...
+    [NbConvertApp] Converting notebook clear-cut-solution.ipynb to markdown
+    [NbConvertApp] Support files will be in backups/clear-cut-solution_files/
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Writing 62232 bytes to backups/clear-cut-solution.md
+    [NbConvertApp] Converting notebook clear-cut-solution.ipynb to html
+    [NbConvertApp] Writing 2422108 bytes to backups/clear-cut-solution.html
+
 
 
 ```python

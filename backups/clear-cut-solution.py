@@ -4,7 +4,7 @@
 # # Forest Cover Type Prediction
 # #### Team: Clear-Cut Solution: Kevin Martin, Yang Jing, Justine Schabel
 
-# In[1]:
+# In[58]:
 
 
 # This tells matplotlib not to try opening a new window for each plot.
@@ -31,7 +31,7 @@ from sklearn.preprocessing import StandardScaler
 
 # ### Load Data
 
-# In[2]:
+# In[59]:
 
 
 # Read in training data 
@@ -43,7 +43,7 @@ test_df = pd.read_csv("data/test.csv")
 # 
 # First, we check the data attributes, quality and shape.
 
-# In[3]:
+# In[60]:
 
 
 # Examine shape 
@@ -53,7 +53,7 @@ print(train_df.shape)
 train_df.describe()
 
 
-# In[4]:
+# In[61]:
 
 
 sns.distplot(train_df['Cover_Type'],rug=True)
@@ -62,7 +62,7 @@ plt.show()
 
 # Here we can see that the training data has a somewhat uniform distribution of covertype and this tells us that our data set is balanced. 
 
-# In[5]:
+# In[62]:
 
 
 sns.violinplot(x=train_df['Cover_Type'],y=train_df['Elevation'])
@@ -71,7 +71,7 @@ plt.show()
 
 # Here, we can see there is a relationship between the cover type and elevation. 
 
-# In[6]:
+# In[63]:
 
 
 # get NA values
@@ -89,7 +89,7 @@ print("There are {} values in the test data".format(test_df.count()[0]))
 # ### Feature Engineering 1
 # Now we'll transform the "Aspect" into cosine and sine values to improve the representation of directions. 
 
-# In[7]:
+# In[64]:
 
 
 #split the aspect into a N/S and E/W unit vector
@@ -112,7 +112,7 @@ df_circle.plot.scatter("asp_ew_jit","asp_ns_jit",alpha=0.04)
 df_circle.head()
 
 
-# In[8]:
+# In[65]:
 
 
 #drop Aspect column
@@ -121,7 +121,7 @@ train_df.drop(columns=["Aspect"], inplace=True)
 
 # Now, we'll isolate and explore the distribution of soil types. 
 
-# In[9]:
+# In[66]:
 
 
 # Isolate soil type column names
@@ -154,7 +154,7 @@ plt.show()
 
 # As we can see in the histogram above, there is an uneven distribution of occurances of soil types.
 
-# In[10]:
+# In[67]:
 
 
 # Explore correlations between features
@@ -163,7 +163,7 @@ train_corr=train_df.corr()
 train_corr['Cover_Type'].abs().sort_values(ascending=False)
 
 
-# In[11]:
+# In[68]:
 
 
 # Visualize the distribution of soil type and "cover type"
@@ -187,7 +187,7 @@ plt.show()
 
 # Now, we'll isolate and explore the distribution of wilderness types. 
 
-# In[12]:
+# In[69]:
 
 
 wilderness_list =['Wilderness_Area1','Wilderness_Area2','Wilderness_Area3','Wilderness_Area4']
@@ -203,7 +203,7 @@ plt.show()
 # 
 # I'm going to hold off on dropping any soil types and just transform them to the new type
 
-# In[13]:
+# In[70]:
 
 
 # # Remove soil type 7 and 15 due to no data
@@ -220,7 +220,7 @@ plt.show()
 # print(train_df.shape)
 
 
-# In[14]:
+# In[71]:
 
 
 #drop Id column as it is not a meaningful feature.
@@ -248,7 +248,7 @@ test_df.drop(columns=["Id"],inplace=True)
 # * See if the "very/extremely" qualifiers on stony should be removed. Do they mean the same thing?
 # * See if changing "rubbly", "bouldery", "stoney" to all one indicator would be better. Do they all mean the same thing?
 
-# In[15]:
+# In[72]:
 
 
 #### Analyze frequqncy that imporant types of soil show up ####
@@ -319,7 +319,7 @@ display(trans_soil_df)
     # print occurence rates of the various features
 
 # remove low occurence soil types
-occ_lim = 0 #0, 2,100,300,900,1400 default # remove columns that have less than occ_lim examples in the data
+occ_lim = 1400 #0, 2,100,300,900,1400 default # remove columns that have less than occ_lim examples in the data
 high_occ_ser = trans_soil_df.sum(axis=0) >= occ_lim
 high_occ_names = [entry for entry in high_occ_ser.index if high_occ_ser[entry]]
 trans_soil_df = trans_soil_df[high_occ_names]
@@ -332,7 +332,7 @@ df_new = df_new[[col for col in df_new if col not in ["Cover_Type"]]+["Cover_Typ
 display(df_new)
 
 
-# In[16]:
+# In[73]:
 
 
 # We'll just reassign the train_df here to be equal to df_new
@@ -345,7 +345,7 @@ train_df = df_new
 # 
 # split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
 
-# In[17]:
+# In[74]:
 
 
 # Split training data (labeled) into 80% training and 20% dev) and randomly sample 
@@ -361,7 +361,7 @@ display(training_data.describe())
 display(dev_data_df.describe())
 
 
-# In[18]:
+# In[75]:
 
 
 # Split into data and labels
@@ -376,7 +376,7 @@ print(train_data.shape)
 print(dev_data.shape)
 
 
-# In[19]:
+# In[76]:
 
 
 train_data.columns
@@ -386,7 +386,7 @@ train_data.columns
 # 
 # Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
 
-# In[20]:
+# In[77]:
 
 
 # Collect numeric feature column names - so we can easily access these columns when modifying them 
@@ -405,14 +405,14 @@ dev_data[num_cols] = norm.transform(dev_data[num_cols])
 print(dev_data.shape)
 
 
-# In[21]:
+# In[78]:
 
 
 # Double check shape
 print(train_data.shape, dev_data.shape)
 
 
-# In[22]:
+# In[79]:
 
 
 # Explore and confirm the shape of the data
@@ -421,7 +421,7 @@ print("Dev data shape: {0} Dev labels shape: {1}".format(dev_data.shape, dev_lab
 print("Test data shape: ", test_data.shape)
 
 
-# In[23]:
+# In[80]:
 
 
 # Examine Training Data 
@@ -431,7 +431,7 @@ dev_data.head()
 # ## Models
 # #### Random Forest
 
-# In[24]:
+# In[81]:
 
 
 # Try a random forest - before any data cleaning 
@@ -453,7 +453,7 @@ for num_trees in num_trees_list:
 
 # #### Naive Bayes (Bernoulli)
 
-# In[25]:
+# In[82]:
 
 
 # Try Naive Bayes - before any data cleaning 
@@ -478,7 +478,7 @@ for alpha in alphas_list:
 
 # #### K-Nearest Neighbors
 
-# In[26]:
+# In[83]:
 
 
 # Try K Nearest Neighbors - before any data cleaning 
@@ -501,7 +501,7 @@ for neigh in neigh_list:
 
 # #### Multi-layer Perceptron
 
-# In[27]:
+# In[84]:
 
 
 # Try Multi-Layer Perceptron - before any data cleaning 
@@ -542,7 +542,7 @@ MLP()
 # 
 # *because sometimes you just want to look at the markdown or whatever real quick*
 
-# In[28]:
+# In[85]:
 
 
 #Create a backup of the jupyter notebook in a format for where changes are easier to see.
