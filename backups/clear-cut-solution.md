@@ -34,57 +34,20 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import accuracy_score
+import tensorflow as tf
+tf.enable_eager_execution()
 ```
 
 
 ```python
 # Mount the drive for file storage
-from google.colab import drive
-drive.mount('/content/drive')
+# from google.colab import drive
+# drive.mount('/content/drive')
 ```
 
 
-    ---------------------------------------------------------------------------
-
-    KeyError                                  Traceback (most recent call last)
-
-    <ipython-input-228-788a3662f10d> in <module>
-          1 # Mount the drive for file storage
-          2 from google.colab import drive
-    ----> 3 drive.mount('/content/drive')
-    
-
-    /opt/conda/lib/python3.7/site-packages/google/colab/drive.py in mount(mountpoint, force_remount, timeout_ms)
-         80     return
-         81 
-    ---> 82   env = _env()
-         83   home = env.home
-         84   root_dir = env.root_dir
-
-
-    /opt/conda/lib/python3.7/site-packages/google/colab/drive.py in _env()
-         41   home = _os.environ['HOME']
-         42   root_dir = _os.path.realpath(
-    ---> 43       _os.path.join(_os.environ['CLOUDSDK_CONFIG'], '../..'))
-         44   inet_family = 'IPV4_ONLY'
-         45   dev = '/dev/fuse'
-
-
-    /opt/conda/lib/python3.7/os.py in __getitem__(self, key)
-        679         except KeyError:
-        680             # raise KeyError with the original key value
-    --> 681             raise KeyError(key) from None
-        682         return self.decodevalue(value)
-        683 
-
-
-    KeyError: 'CLOUDSDK_CONFIG'
-
-
-
 ```python
-os.chdir('/content/drive/My Drive/W207-Final-Project')
-
+# os.chdir('/content/drive/My Drive/W207-Final-Project')
 ```
 
 ### Load Data
@@ -111,11 +74,321 @@ print(train_df.shape)
 train_df.describe()
 ```
 
+    (15120, 56)
+
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Id</th>
+      <th>Elevation</th>
+      <th>Aspect</th>
+      <th>Slope</th>
+      <th>Horizontal_Distance_To_Hydrology</th>
+      <th>Vertical_Distance_To_Hydrology</th>
+      <th>Horizontal_Distance_To_Roadways</th>
+      <th>Hillshade_9am</th>
+      <th>Hillshade_Noon</th>
+      <th>Hillshade_3pm</th>
+      <th>...</th>
+      <th>Soil_Type32</th>
+      <th>Soil_Type33</th>
+      <th>Soil_Type34</th>
+      <th>Soil_Type35</th>
+      <th>Soil_Type36</th>
+      <th>Soil_Type37</th>
+      <th>Soil_Type38</th>
+      <th>Soil_Type39</th>
+      <th>Soil_Type40</th>
+      <th>Cover_Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>15120.00000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>...</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+      <td>15120.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>7560.50000</td>
+      <td>2749.322553</td>
+      <td>156.676653</td>
+      <td>16.501587</td>
+      <td>227.195701</td>
+      <td>51.076521</td>
+      <td>1714.023214</td>
+      <td>212.704299</td>
+      <td>218.965608</td>
+      <td>135.091997</td>
+      <td>...</td>
+      <td>0.045635</td>
+      <td>0.040741</td>
+      <td>0.001455</td>
+      <td>0.006746</td>
+      <td>0.000661</td>
+      <td>0.002249</td>
+      <td>0.048148</td>
+      <td>0.043452</td>
+      <td>0.030357</td>
+      <td>4.000000</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>4364.91237</td>
+      <td>417.678187</td>
+      <td>110.085801</td>
+      <td>8.453927</td>
+      <td>210.075296</td>
+      <td>61.239406</td>
+      <td>1325.066358</td>
+      <td>30.561287</td>
+      <td>22.801966</td>
+      <td>45.895189</td>
+      <td>...</td>
+      <td>0.208699</td>
+      <td>0.197696</td>
+      <td>0.038118</td>
+      <td>0.081859</td>
+      <td>0.025710</td>
+      <td>0.047368</td>
+      <td>0.214086</td>
+      <td>0.203880</td>
+      <td>0.171574</td>
+      <td>2.000066</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>1.00000</td>
+      <td>1863.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>-146.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>99.000000</td>
+      <td>0.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>3780.75000</td>
+      <td>2376.000000</td>
+      <td>65.000000</td>
+      <td>10.000000</td>
+      <td>67.000000</td>
+      <td>5.000000</td>
+      <td>764.000000</td>
+      <td>196.000000</td>
+      <td>207.000000</td>
+      <td>106.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>2.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>7560.50000</td>
+      <td>2752.000000</td>
+      <td>126.000000</td>
+      <td>15.000000</td>
+      <td>180.000000</td>
+      <td>32.000000</td>
+      <td>1316.000000</td>
+      <td>220.000000</td>
+      <td>223.000000</td>
+      <td>138.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>4.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>11340.25000</td>
+      <td>3104.000000</td>
+      <td>261.000000</td>
+      <td>22.000000</td>
+      <td>330.000000</td>
+      <td>79.000000</td>
+      <td>2270.000000</td>
+      <td>235.000000</td>
+      <td>235.000000</td>
+      <td>167.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>6.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>15120.00000</td>
+      <td>3849.000000</td>
+      <td>360.000000</td>
+      <td>52.000000</td>
+      <td>1343.000000</td>
+      <td>554.000000</td>
+      <td>6890.000000</td>
+      <td>254.000000</td>
+      <td>254.000000</td>
+      <td>248.000000</td>
+      <td>...</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>7.000000</td>
+    </tr>
+  </tbody>
+</table>
+<p>8 rows × 56 columns</p>
+</div>
+
+
+
 
 ```python
 # Check data types
 train_df.dtypes
 ```
+
+
+
+
+    Id                                    int64
+    Elevation                             int64
+    Aspect                                int64
+    Slope                                 int64
+    Horizontal_Distance_To_Hydrology      int64
+    Vertical_Distance_To_Hydrology        int64
+    Horizontal_Distance_To_Roadways       int64
+    Hillshade_9am                         int64
+    Hillshade_Noon                        int64
+    Hillshade_3pm                         int64
+    Horizontal_Distance_To_Fire_Points    int64
+    Wilderness_Area1                      int64
+    Wilderness_Area2                      int64
+    Wilderness_Area3                      int64
+    Wilderness_Area4                      int64
+    Soil_Type1                            int64
+    Soil_Type2                            int64
+    Soil_Type3                            int64
+    Soil_Type4                            int64
+    Soil_Type5                            int64
+    Soil_Type6                            int64
+    Soil_Type7                            int64
+    Soil_Type8                            int64
+    Soil_Type9                            int64
+    Soil_Type10                           int64
+    Soil_Type11                           int64
+    Soil_Type12                           int64
+    Soil_Type13                           int64
+    Soil_Type14                           int64
+    Soil_Type15                           int64
+    Soil_Type16                           int64
+    Soil_Type17                           int64
+    Soil_Type18                           int64
+    Soil_Type19                           int64
+    Soil_Type20                           int64
+    Soil_Type21                           int64
+    Soil_Type22                           int64
+    Soil_Type23                           int64
+    Soil_Type24                           int64
+    Soil_Type25                           int64
+    Soil_Type26                           int64
+    Soil_Type27                           int64
+    Soil_Type28                           int64
+    Soil_Type29                           int64
+    Soil_Type30                           int64
+    Soil_Type31                           int64
+    Soil_Type32                           int64
+    Soil_Type33                           int64
+    Soil_Type34                           int64
+    Soil_Type35                           int64
+    Soil_Type36                           int64
+    Soil_Type37                           int64
+    Soil_Type38                           int64
+    Soil_Type39                           int64
+    Soil_Type40                           int64
+    Cover_Type                            int64
+    dtype: object
+
+
 
 #### Verify Dataset Is Balanced
 
@@ -126,6 +399,14 @@ plt.figure(figsize=(6,4))
 sns.displot(train_df["Cover_Type"],rug=True)
 plt.show()
 ```
+
+
+    <Figure size 432x288 with 0 Axes>
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_14_1.png)
+
 
 Here we can see that the training data has a somewhat uniform distribution of covertype and this tells us that our data set is balanced. 
 
@@ -140,6 +421,13 @@ print("There are {} NA values in the test data\n".format(train_df.isna().sum().s
 print("There are {} values in the training data".format(train_df.count()[0]))
 print("There are {} values in the test data".format(test_df.count()[0]))
 ```
+
+    There are 0 NA values in the training data
+    There are 0 NA values in the test data
+    
+    There are 15120 values in the training data
+    There are 565892 values in the test data
+
 
 There are no null values in the dataset. 
 
@@ -168,6 +456,10 @@ for i in range(col_count):
         axes[i//2][j].grid()
 ```
 
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_21_0.png)
+
+
 Here we can see the distribution are skewed for a few variables, espcially in the "distance" related ones, such as "Horizontal_Diestance_To_Fire_points". A log-transformation may improve the model performance. Also, there are zeros in these variables, we need to add 1 before performing the log transofrmation.
 
 
@@ -180,6 +472,10 @@ for i in range(col_count):
         sns.violinplot(x=train_df['Cover_Type'], y= col, ax=axes[i//2][j])
         axes[i//2][j].grid()
 ```
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_23_0.png)
+
 
 First, we can see there is a relationship between the cover type and elevation. The difference in the other fetures by cover type seem less significant. Cover type 1 and 2 share a lot of similar features. We need to find a way to magnify the signal between the 2 cover types. 
 
@@ -197,6 +493,44 @@ train_corr1['Cover_Type'].abs().sort_values(ascending=False)[:31]
 ```
 
 
+
+
+    Cover_Type                            1.000000
+    Soil_Type38                           0.257810
+    Soil_Type39                           0.240384
+    Wilderness_Area1                      0.230117
+    Soil_Type29                           0.218564
+    Soil_Type40                           0.205851
+    Soil_Type22                           0.195993
+    Soil_Type23                           0.158762
+    Soil_Type32                           0.132312
+    Soil_Type12                           0.129985
+    Soil_Type10                           0.128972
+    Wilderness_Area3                      0.122146
+    Soil_Type35                           0.114327
+    Id                                    0.108363
+    Horizontal_Distance_To_Roadways       0.105662
+    Soil_Type24                           0.100797
+    Hillshade_Noon                        0.098905
+    Horizontal_Distance_To_Fire_Points    0.089389
+    Slope                                 0.087722
+    Soil_Type31                           0.079882
+    Soil_Type33                           0.078955
+    Wilderness_Area4                      0.075774
+    Vertical_Distance_To_Hydrology        0.075647
+    Soil_Type37                           0.071210
+    Hillshade_3pm                         0.053399
+    Soil_Type20                           0.053013
+    Soil_Type17                           0.042453
+    Soil_Type13                           0.040528
+    Soil_Type19                           0.031824
+    Soil_Type4                            0.027816
+    Soil_Type5                            0.027692
+    Name: Cover_Type, dtype: float64
+
+
+
+
 ```python
 # Explore correlations between numerical features
 train_corr = train_df[num_cols].corr()
@@ -206,6 +540,10 @@ ax = plt.figure(figsize=(8,8))
 sns.heatmap(train_corr, xticklabels=train_corr.columns.values, yticklabels=train_corr.columns.values)
 plt.show()
 ```
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_28_0.png)
+
 
 From the above, "Hillshade_9am" has strong correlation with "Hillshade_3pm" and "Aspect". We may drop this feature to avoid multi-collinearity.
 
@@ -248,6 +586,250 @@ df1 = df1.pivot("Cover_Type","soil_type","yes")
 df1
 ```
 
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>soil_type</th>
+      <th>Soil_Type1</th>
+      <th>Soil_Type10</th>
+      <th>Soil_Type11</th>
+      <th>Soil_Type12</th>
+      <th>Soil_Type13</th>
+      <th>Soil_Type14</th>
+      <th>Soil_Type16</th>
+      <th>Soil_Type17</th>
+      <th>Soil_Type18</th>
+      <th>Soil_Type19</th>
+      <th>...</th>
+      <th>Soil_Type4</th>
+      <th>Soil_Type40</th>
+      <th>Soil_Type5</th>
+      <th>Soil_Type6</th>
+      <th>Soil_Type8</th>
+      <th>Soil_Type9</th>
+      <th>Wilderness_Area1</th>
+      <th>Wilderness_Area2</th>
+      <th>Wilderness_Area3</th>
+      <th>Wilderness_Area4</th>
+    </tr>
+    <tr>
+      <th>Cover_Type</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>NaN</td>
+      <td>9.0</td>
+      <td>5.0</td>
+      <td>24.0</td>
+      <td>17.0</td>
+      <td>NaN</td>
+      <td>9.0</td>
+      <td>2.0</td>
+      <td>NaN</td>
+      <td>15.0</td>
+      <td>...</td>
+      <td>5.0</td>
+      <td>49.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>1.0</td>
+      <td>1062.0</td>
+      <td>181.0</td>
+      <td>917.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>NaN</td>
+      <td>81.0</td>
+      <td>67.0</td>
+      <td>203.0</td>
+      <td>84.0</td>
+      <td>NaN</td>
+      <td>14.0</td>
+      <td>7.0</td>
+      <td>16.0</td>
+      <td>13.0</td>
+      <td>...</td>
+      <td>20.0</td>
+      <td>3.0</td>
+      <td>NaN</td>
+      <td>7.0</td>
+      <td>1.0</td>
+      <td>9.0</td>
+      <td>1134.0</td>
+      <td>66.0</td>
+      <td>940.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>121.0</td>
+      <td>717.0</td>
+      <td>89.0</td>
+      <td>NaN</td>
+      <td>4.0</td>
+      <td>4.0</td>
+      <td>5.0</td>
+      <td>34.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>...</td>
+      <td>462.0</td>
+      <td>NaN</td>
+      <td>55.0</td>
+      <td>248.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>863.0</td>
+      <td>1297.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>139.0</td>
+      <td>170.0</td>
+      <td>24.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>128.0</td>
+      <td>40.0</td>
+      <td>350.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>...</td>
+      <td>133.0</td>
+      <td>NaN</td>
+      <td>39.0</td>
+      <td>244.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2160.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>NaN</td>
+      <td>64.0</td>
+      <td>154.0</td>
+      <td>NaN</td>
+      <td>305.0</td>
+      <td>NaN</td>
+      <td>9.0</td>
+      <td>131.0</td>
+      <td>44.0</td>
+      <td>18.0</td>
+      <td>...</td>
+      <td>129.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>856.0</td>
+      <td>NaN</td>
+      <td>1304.0</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>95.0</td>
+      <td>1101.0</td>
+      <td>67.0</td>
+      <td>NaN</td>
+      <td>66.0</td>
+      <td>37.0</td>
+      <td>37.0</td>
+      <td>88.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>...</td>
+      <td>87.0</td>
+      <td>NaN</td>
+      <td>71.0</td>
+      <td>151.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>962.0</td>
+      <td>1198.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>...</td>
+      <td>7.0</td>
+      <td>407.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>545.0</td>
+      <td>252.0</td>
+      <td>1363.0</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+<p>7 rows × 42 columns</p>
+</div>
+
+
+
 As we can see in the pivot table above, there are similar combinations of soil types for different "cover type". We'll combine the soil types that share same "cover types" to reduce dimensionality. Further, "cover type 1" and "cover type 2" , "cover type 3" and "cover type 6" share many overlapping features. To magnify the signal, we'll combine features as an extra feature where there is a difference between the 2 pairs of cover types.
 
 
@@ -269,6 +851,10 @@ for i in range(len(st_list)):
 plt.show()
 ```
 
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_35_0.png)
+
+
 Here we can examine the relationship between soil type and cover type for each soil type. # TODO: Discuss more
 
 #### Wilderness Types
@@ -285,6 +871,10 @@ for i in range(4):
     sns.violinplot(y=train_df['Cover_Type'],x=train_df[wilderness_list[i]], ax=axes[i//2,i%2])
 plt.show()
 ```
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_39_0.png)
+
 
 ## Feature Engineering 
 
@@ -353,6 +943,9 @@ train_df["st6w4"] = train_df["Soil_Type6"] + train_df["Wilderness_Area4"]
 print(train_df.shape)
 ```
 
+    (15120, 53)
+
+
 #### Transform Aspect 
 
 Now we'll transform the Asepct feature.
@@ -371,6 +964,9 @@ train_df.drop(columns= ["Aspect"], inplace=True)
 print(train_df.shape)
 ```
 
+    (15120, 54)
+
+
 
 ```python
 # Visualize cover type VS the cosine of Aspect degerees
@@ -379,6 +975,10 @@ sns.violinplot(x=train_df['Cover_Type'],y=train_df['ap_ew'],ax=ax1)
 sns.histplot(train_df['ap_ew'],ax=ax2)
 plt.show()
 ```
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_52_0.png)
+
 
 After the feature transformation, we see improved distinction in median values, espeically for cover type 6, where the median is notably higher than that of other cover types  and the distribution is concentrated around the median. 
 
@@ -406,6 +1006,9 @@ train_df[fe4_cols] = np.log(train_df[fe4_cols])
 train_df["elv_pwd"] = train_df["Elevation"]**2
 ```
 
+    Vertical_Distance_To_Hydrology Minimum:  -146
+
+
 #### Drop Id Column
 
 
@@ -425,13 +1028,13 @@ Hillshade_9am has a strong correlation with Hillshade_3pm and Aspect. TODO: If w
 
 
 ```python
-all_features = set(train_data.columns.to_list())
+all_features = set(train_df.columns.to_list())
 
 # Select features to drop. 
 to_drop = set(['Hillshade_9am'])
 
 sel_features = list(all_features - to_drop)
-train_data =train_data[sel_features]
+train_df =train_df[sel_features]
 ```
 
 #### Split Data into Train/Dev/Test
@@ -452,6 +1055,254 @@ print(dev_data_df.shape)
 training_data.describe()
 ```
 
+    (12096, 53)
+    (3024, 53)
+
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Soil_Type32</th>
+      <th>Cover_Type</th>
+      <th>Soil_Type2</th>
+      <th>Soil_Type16</th>
+      <th>Soil_Type23</th>
+      <th>Vertical_Distance_To_Hydrology</th>
+      <th>soil_type35383940</th>
+      <th>Horizontal_Distance_To_Roadways</th>
+      <th>Slope</th>
+      <th>Soil_Type14</th>
+      <th>...</th>
+      <th>Soil_Type13</th>
+      <th>Hillshade_3pm</th>
+      <th>st6w4</th>
+      <th>Soil_Type39</th>
+      <th>Soil_Type12</th>
+      <th>Horizontal_Distance_To_Fire_Points</th>
+      <th>Soil_Type24</th>
+      <th>Wilderness_Area2</th>
+      <th>Soil_Type4</th>
+      <th>Wilderness_Area3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>...</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.000000</td>
+      <td>12096.00000</td>
+      <td>12096.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>0.045635</td>
+      <td>4.000000</td>
+      <td>0.040509</td>
+      <td>0.007523</td>
+      <td>0.049686</td>
+      <td>5.245071</td>
+      <td>0.126075</td>
+      <td>7.276575</td>
+      <td>16.449074</td>
+      <td>0.011574</td>
+      <td>...</td>
+      <td>0.032655</td>
+      <td>0.531023</td>
+      <td>0.352596</td>
+      <td>0.041171</td>
+      <td>0.014964</td>
+      <td>7.212667</td>
+      <td>0.016865</td>
+      <td>0.031911</td>
+      <td>0.05539</td>
+      <td>0.418981</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>0.208701</td>
+      <td>1.997642</td>
+      <td>0.197158</td>
+      <td>0.086413</td>
+      <td>0.217304</td>
+      <td>0.283198</td>
+      <td>0.331947</td>
+      <td>0.733137</td>
+      <td>8.443615</td>
+      <td>0.106963</td>
+      <td>...</td>
+      <td>0.177740</td>
+      <td>0.179201</td>
+      <td>0.559571</td>
+      <td>0.198693</td>
+      <td>0.121412</td>
+      <td>0.649249</td>
+      <td>0.128771</td>
+      <td>0.175771</td>
+      <td>0.22875</td>
+      <td>0.493413</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>0.000000</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>4.990433</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>4.990433</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.00000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>0.000000</td>
+      <td>2.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>5.023881</td>
+      <td>0.000000</td>
+      <td>6.806829</td>
+      <td>10.000000</td>
+      <td>0.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.419608</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>6.776507</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.00000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>0.000000</td>
+      <td>4.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>5.187386</td>
+      <td>0.000000</td>
+      <td>7.288244</td>
+      <td>15.000000</td>
+      <td>0.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.541176</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>7.250636</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.00000</td>
+      <td>0.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>0.000000</td>
+      <td>6.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>5.420535</td>
+      <td>0.000000</td>
+      <td>7.787382</td>
+      <td>22.000000</td>
+      <td>0.000000</td>
+      <td>...</td>
+      <td>0.000000</td>
+      <td>0.654902</td>
+      <td>1.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>7.669028</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.00000</td>
+      <td>1.000000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>1.000000</td>
+      <td>7.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>6.552508</td>
+      <td>1.000000</td>
+      <td>8.847647</td>
+      <td>50.000000</td>
+      <td>1.000000</td>
+      <td>...</td>
+      <td>1.000000</td>
+      <td>0.972549</td>
+      <td>2.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>8.873468</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.00000</td>
+      <td>1.000000</td>
+    </tr>
+  </tbody>
+</table>
+<p>8 rows × 53 columns</p>
+</div>
+
+
+
 
 ```python
 # Split into data and labels
@@ -465,6 +1316,10 @@ test_data = test_df
 print(train_data.shape)
 print(dev_data.shape)
 ```
+
+    (12096, 52)
+    (3024, 52)
+
 
 #### Scale Data
 Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
@@ -501,6 +1356,13 @@ print("Dev data shape: {0} Dev labels shape: {1}\n".format(dev_data.shape, dev_d
 print("Test data shape: ", test_data.shape)
 ```
 
+    Training data shape: (12096, 52) Training labels shape: (12096,)
+    
+    Dev data shape: (3024, 52) Dev labels shape: (3024, 52)
+    
+    Test data shape:  (565892, 54)
+
+
 ## Models
 #### Random Forest
 
@@ -529,6 +1391,38 @@ for num_trees in num_trees_list:
     random_forest_results[score] = probabilities
 ```
 
+    Random Forest Performance for 1 trees: 0.5651455026455027
+    Mean Squared Error:  3.693452380952381
+    Random Forest Performance for 3 trees: 0.7056878306878307
+    Mean Squared Error:  2.5400132275132274
+    Random Forest Performance for 5 trees: 0.7423941798941799
+    Mean Squared Error:  2.3392857142857144
+    Random Forest Performance for 10 trees: 0.7380952380952381
+    Mean Squared Error:  2.363095238095238
+    Random Forest Performance for 100 trees: 0.7493386243386243
+    Mean Squared Error:  2.3191137566137567
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_1.png)
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_2.png)
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_3.png)
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_4.png)
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_5.png)
+
+
 #### Naive Bayes (Bernoulli)
 
 
@@ -552,6 +1446,16 @@ alphas_list = [0.01]
 for alpha in alphas_list:
     NB(alpha)
 ```
+
+    BernoulliNB for alph = 0.01: accuracy = 0.5995370370370371
+    
+    
+    
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_70_1.png)
+
 
 
 ```python
@@ -603,6 +1507,38 @@ for neigh in neigh_list:
     knn_results[score] = probabilities 
 ```
 
+    KNN 1 neighbors : accuracy = 0.8382936507936508
+    Mean Squared Error:  1.382936507936508
+    KNN 2 neighbors : accuracy = 0.8184523809523809
+    Mean Squared Error:  1.3640873015873016
+    KNN 4 neighbors : accuracy = 0.8158068783068783
+    Mean Squared Error:  1.5148809523809523
+    KNN 7 neighbors : accuracy = 0.8062169312169312
+    Mean Squared Error:  1.7599206349206349
+    KNN 10 neighbors : accuracy = 0.7913359788359788
+    Mean Squared Error:  1.8941798941798942
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_1.png)
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_2.png)
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_3.png)
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_4.png)
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_5.png)
+
+
 #### Multi-layer Perceptron
 
 
@@ -634,6 +1570,18 @@ score, probabilities = MLP()
 mlp_results[score] = probabilities 
 ```
 
+    /opt/conda/lib/python3.7/site-packages/sklearn/neural_network/_multilayer_perceptron.py:585: ConvergenceWarning: Stochastic Optimizer: Maximum iterations (300) reached and the optimization hasn't converged yet.
+      % self.max_iter, ConvergenceWarning)
+
+
+    MLP accuracy =  0.8508597883597884
+    Mean Squared Error:  1.273478835978836
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_75_2.png)
+
+
 #### Logistic Regression
 
 
@@ -647,30 +1595,53 @@ def LR():
 LR()
 ```
 
+    Logistic Regression accuracy =  0.6841931216931217
+
+
 #### Neural Network with Tensorflow
 
 
 ```python
-import tensorflow as tf
+
 ```
 
 
 ```python
-print(train_data.shape)
+tf.executing_eagerly()
 ```
+
+
+
+
+    True
+
+
+
+
+```python
+train_data[:1].shape
+type(train_data.to_numpy())
+```
+
+
+
+
+    numpy.ndarray
+
+
 
 
 ```python
 model = tf.keras.models.Sequential([
-  tf.keras.layers.Flatten(input_shape=(1, 53)),
+  tf.keras.layers.Flatten(input_shape=(1, 52)),
   tf.keras.layers.Dense(128, activation='relu'),
   tf.keras.layers.Dropout(0.2),
   tf.keras.layers.Dense(10)
 ])
 
-# # Retrieve predictions 
-predictions = model(train_data[:1]).numpy()
-# # Convert logits to probabilities
+# Retrieve predictions 
+predictions = model(train_data[:1].to_numpy())
+# Convert logits to probabilities
 tf.nn.softmax(predictions).numpy()
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(optimizer='adam',
@@ -680,9 +1651,58 @@ model.fit(train_data, train_labels, epochs=5)
 
 ```
 
+    WARNING:tensorflow:Falling back from v2 loop because of error: Failed to find data adapter that can handle input: <class 'pandas.core.frame.DataFrame'>, <class 'NoneType'>
+
+
+
+    ---------------------------------------------------------------------------
+
+    ValueError                                Traceback (most recent call last)
+
+    <ipython-input-53-ce9b6a1b2b7f> in <module>
+         14               loss=loss_fn,
+         15               metrics=['accuracy'])
+    ---> 16 model.fit(train_data, train_labels, epochs=5)
+    
+
+    /opt/conda/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/training.py in fit(self, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, validation_freq, max_queue_size, workers, use_multiprocessing, **kwargs)
+        725         max_queue_size=max_queue_size,
+        726         workers=workers,
+    --> 727         use_multiprocessing=use_multiprocessing)
+        728 
+        729   def evaluate(self,
+
+
+    /opt/conda/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/training_arrays.py in fit(self, model, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, validation_freq, **kwargs)
+        641         steps=steps_per_epoch,
+        642         validation_split=validation_split,
+    --> 643         shuffle=shuffle)
+        644 
+        645     if validation_data:
+
+
+    /opt/conda/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/training.py in _standardize_user_data(self, x, y, sample_weight, class_weight, batch_size, check_steps, steps_name, steps, validation_split, shuffle, extract_tensors_from_dataset)
+       2469           feed_input_shapes,
+       2470           check_batch_axis=False,  # Don't enforce the batch size.
+    -> 2471           exception_prefix='input')
+       2472 
+       2473     # Get typespecs for the input data and sanitize it if necessary.
+
+
+    /opt/conda/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/training_utils.py in standardize_input_data(data, names, shapes, check_batch_axis, exception_prefix)
+        561                            ': expected ' + names[i] + ' to have ' +
+        562                            str(len(shape)) + ' dimensions, but got array '
+    --> 563                            'with shape ' + str(data_shape))
+        564         if not check_batch_axis:
+        565           data_shape = data_shape[1:]
+
+
+    ValueError: Error when checking input: expected flatten_2_input to have 3 dimensions, but got array with shape (12096, 52)
+
+
 
 ```python
-model.evaluate(dev_data,  dev_labels, verbose=2)
+# model.evaluate(dev_data,  dev_labels, verbose=2)
 ```
 
 #### Ensemble
@@ -725,9 +1745,9 @@ def Ensemble():
         # Assign the new prediction
         new_predictions.append(classification)
     print("Models disagreed on {0}/{1} dev examples.".format(count, dev_labels.shape[0]))
-    return np.array(new_predictions).astype(int)
+    return predicted_classes, np.array(new_predictions).astype(int)
 
-new_predictions = Ensemble()
+predicted_classes, new_predictions = Ensemble()
 mse_ensemble = mean_squared_error(dev_labels, new_predictions)
 accuracy = accuracy_score(dev_labels, new_predictions)
 print("Mean Squared Error: ", mse_ensemble)

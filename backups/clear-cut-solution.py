@@ -9,11 +9,11 @@
 # ## Initial Setup
 # ### Import Required Libraries
 
-# In[227]:
+# In[1]:
 
 
 # This tells matplotlib not to try opening a new window for each plot.
-get_ipython().magic('matplotlib inline')
+get_ipython().run_line_magic('matplotlib', 'inline')
 
 # Libraries for reading, cleaning and plotting the dataa
 import numpy as np 
@@ -38,25 +38,27 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import accuracy_score
+import tensorflow as tf
+tf.enable_eager_execution()
 
 
-# In[228]:
+# In[2]:
 
 
 # Mount the drive for file storage
-from google.colab import drive
-drive.mount('/content/drive')
+# from google.colab import drive
+# drive.mount('/content/drive')
 
 
-# In[ ]:
+# In[3]:
 
 
-os.chdir('/content/drive/My Drive/W207-Final-Project')
+# os.chdir('/content/drive/My Drive/W207-Final-Project')
 
 
 # ### Load Data
 
-# In[ ]:
+# In[4]:
 
 
 # Read in training data 
@@ -70,7 +72,7 @@ test_df = pd.read_csv("data/test.csv")
 
 # First, we check the data attributes, quality and shape.
 
-# In[ ]:
+# In[5]:
 
 
 # Examine shape 
@@ -80,7 +82,7 @@ print(train_df.shape)
 train_df.describe()
 
 
-# In[ ]:
+# In[6]:
 
 
 # Check data types
@@ -89,7 +91,7 @@ train_df.dtypes
 
 # #### Verify Dataset Is Balanced
 
-# In[ ]:
+# In[7]:
 
 
 # Visualize the distribution of labels, "Cover_Type"
@@ -102,7 +104,7 @@ plt.show()
 
 # #### Check For Null Values
 
-# In[ ]:
+# In[8]:
 
 
 # Check for NA values
@@ -117,7 +119,7 @@ print("There are {} values in the test data".format(test_df.count()[0]))
 
 # #### Distributions of Numeric Columns
 
-# In[ ]:
+# In[9]:
 
 
 # Collect numeric feature column names - so we can easily access these columns when modifying them 
@@ -127,7 +129,7 @@ num_cols = ['Elevation', 'Slope','Aspect',
        'Hillshade_3pm', 'Horizontal_Distance_To_Fire_Points']
 
 
-# In[ ]:
+# In[10]:
 
 
 # Visualize the distribution of numerical columns
@@ -144,7 +146,7 @@ for i in range(col_count):
 
 # Here we can see the distribution are skewed for a few variables, espcially in the "distance" related ones, such as "Horizontal_Diestance_To_Fire_points". A log-transformation may improve the model performance. Also, there are zeros in these variables, we need to add 1 before performing the log transofrmation.
 
-# In[ ]:
+# In[11]:
 
 
 # Visualize the distribution of numerical columns with Cover Type
@@ -163,7 +165,7 @@ for i in range(col_count):
 
 # #### Correlation
 
-# In[ ]:
+# In[12]:
 
 
 # Rank correlations with "cover type"
@@ -172,7 +174,7 @@ train_corr1=train_df.corr()
 train_corr1['Cover_Type'].abs().sort_values(ascending=False)[:31]
 
 
-# In[ ]:
+# In[13]:
 
 
 # Explore correlations between numerical features
@@ -190,7 +192,7 @@ plt.show()
 
 # Now, we'll isolate and explore the distribution of soil types. 
 
-# In[ ]:
+# In[14]:
 
 
 # Get a list of categorical column names
@@ -217,7 +219,7 @@ mask1 = soil_df_unpivoted["yes"] == 1
 soil_df_unpivoted = soil_df_unpivoted[mask1]
 
 
-# In[ ]:
+# In[15]:
 
 
 # Visualize cover type VS soil type in a pivot table. 
@@ -228,7 +230,7 @@ df1
 
 # As we can see in the pivot table above, there are similar combinations of soil types for different "cover type". We'll combine the soil types that share same "cover types" to reduce dimensionality. Further, "cover type 1" and "cover type 2" , "cover type 3" and "cover type 6" share many overlapping features. To magnify the signal, we'll combine features as an extra feature where there is a difference between the 2 pairs of cover types.
 
-# In[ ]:
+# In[16]:
 
 
 # Visualize the distribution of soil type and "cover type"
@@ -254,7 +256,7 @@ plt.show()
 
 # Now, we'll isolate and explore the distribution of wilderness types. 
 
-# In[ ]:
+# In[17]:
 
 
 wilderness_list =['Wilderness_Area1','Wilderness_Area2','Wilderness_Area3','Wilderness_Area4']
@@ -272,7 +274,7 @@ plt.show()
 # 
 # Now we'll normalize the "Hillsdale" variables by dividing them by 255. TODO: Can we explain why? We'll scale them all later? 
 
-# In[ ]:
+# In[18]:
 
 
 fe1_cols = ['Hillshade_9am', 'Hillshade_Noon',
@@ -284,7 +286,7 @@ train_df[fe1_cols] = train_df[fe1_cols]/255
 
 # Now we'll create additional features to magnify the differences betweeen cover type1 and 2, and covery type3 and 6.
 
-# In[ ]:
+# In[19]:
 
 
 # Create additional features to magnify the differences between cover type 1 and 2
@@ -299,7 +301,7 @@ train_df["type6st"] = train_df["Soil_Type20"] + train_df["Soil_Type23"]+ train_d
 # 
 # Now we'll drop soil types that don't exist in the training set. Then we will combine soil types 35, 38, 39 and 40 because they have a very similar distribution. 
 
-# In[ ]:
+# In[20]:
 
 
 # Remove soil type 7 and 15 due to no data
@@ -311,7 +313,7 @@ train_df.drop(columns=["Soil_Type19", "Soil_Type37","Soil_Type34", "Soil_Type21"
 
 # #### Combine Similar Soil Types
 
-# In[ ]:
+# In[21]:
 
 
 # Combine soil type 35,38,39, 40
@@ -338,7 +340,7 @@ print(train_df.shape)
 # Now we'll transform the Asepct feature.
 # TODO: Explain more
 
-# In[ ]:
+# In[22]:
 
 
 # Convert aspect into sine and cosine values 
@@ -352,7 +354,7 @@ train_df.drop(columns= ["Aspect"], inplace=True)
 print(train_df.shape)
 
 
-# In[ ]:
+# In[23]:
 
 
 # Visualize cover type VS the cosine of Aspect degerees
@@ -368,7 +370,7 @@ plt.show()
 # 
 # Now we'll log transform the features related to the distances.
 
-# In[ ]:
+# In[24]:
 
 
 # Complie a list of features to perform log transformation
@@ -391,7 +393,7 @@ train_df["elv_pwd"] = train_df["Elevation"]**2
 
 # #### Drop Id Column
 
-# In[ ]:
+# In[25]:
 
 
 # TODO: Can this be removed? We should drop id in the training data we actually use. 
@@ -407,23 +409,23 @@ test_df.drop(columns=["Id"],inplace=True)
 # 
 # Hillshade_9am has a strong correlation with Hillshade_3pm and Aspect. TODO: If we're only dropping Hillshade_9am here we can drop it directly  
 
-# In[ ]:
+# In[26]:
 
 
-all_features = set(train_data.columns.to_list())
+all_features = set(train_df.columns.to_list())
 
 # Select features to drop. 
 to_drop = set(['Hillshade_9am'])
 
 sel_features = list(all_features - to_drop)
-train_data =train_data[sel_features]
+train_df =train_df[sel_features]
 
 
 # #### Split Data into Train/Dev/Test
 # 
 # Then, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
 
-# In[ ]:
+# In[27]:
 
 
 # Split training data (labeled) into 80% training and 20% dev) and randomly sample 
@@ -438,7 +440,7 @@ print(dev_data_df.shape)
 training_data.describe()
 
 
-# In[ ]:
+# In[28]:
 
 
 # Split into data and labels
@@ -456,7 +458,7 @@ print(dev_data.shape)
 # #### Scale Data
 # Additionally, we will scale the training data to have a mean of 0 and a variance of 1. Then we will retrieve the original training mean and variance for each feature and use that to standardize the development data.
 
-# In[ ]:
+# In[29]:
 
 
 #compile a list for columns for scaling
@@ -465,7 +467,7 @@ ss_cols = ['Elevation','Slope', 'Horizontal_Distance_To_Hydrology',
        'Horizontal_Distance_To_Fire_Points','elv_pwd']
 
 
-# In[ ]:
+# In[30]:
 
 
 # Normalize features using the standard scaler [training data]
@@ -482,7 +484,7 @@ def scaler(ss="",cols=ss_cols):
 scaler()
 
 
-# In[ ]:
+# In[31]:
 
 
 # Explore and confirm the shape of the data
@@ -494,7 +496,7 @@ print("Test data shape: ", test_data.shape)
 # ## Models
 # #### Random Forest
 
-# In[ ]:
+# In[32]:
 
 
 # Try a random forest - before any data cleaning 
@@ -522,7 +524,7 @@ for num_trees in num_trees_list:
 
 # #### Naive Bayes (Bernoulli)
 
-# In[ ]:
+# In[33]:
 
 
 # Try Naive Bayes - Bernoulli 
@@ -545,7 +547,7 @@ for alpha in alphas_list:
     NB(alpha)
 
 
-# In[ ]:
+# In[34]:
 
 
 # # Try Naive Bayes - multi-nominal
@@ -570,7 +572,7 @@ for alpha in alphas_list:
 
 # #### K-Nearest Neighbors
 
-# In[ ]:
+# In[35]:
 
 
 # Try K Nearest Neighbors - before any data cleaning 
@@ -599,7 +601,7 @@ for neigh in neigh_list:
 
 # #### Multi-layer Perceptron
 
-# In[ ]:
+# In[36]:
 
 
 # Try Multi-Layer Perceptron - before any data cleaning 
@@ -631,7 +633,7 @@ mlp_results[score] = probabilities
 
 # #### Logistic Regression
 
-# In[ ]:
+# In[37]:
 
 
 # Logistic regression
@@ -645,31 +647,38 @@ LR()
 
 # #### Neural Network with Tensorflow
 
-# In[ ]:
+# In[38]:
 
 
-import tensorflow as tf
 
 
-# In[ ]:
+
+# In[40]:
 
 
-print(train_data.shape)
+tf.executing_eagerly()
 
 
-# In[ ]:
+# In[52]:
+
+
+train_data[:1].shape
+type(train_data.to_numpy())
+
+
+# In[53]:
 
 
 model = tf.keras.models.Sequential([
-  tf.keras.layers.Flatten(input_shape=(1, 53)),
+  tf.keras.layers.Flatten(input_shape=(1, 52)),
   tf.keras.layers.Dense(128, activation='relu'),
   tf.keras.layers.Dropout(0.2),
   tf.keras.layers.Dense(10)
 ])
 
-# # Retrieve predictions 
-predictions = model(train_data[:1]).numpy()
-# # Convert logits to probabilities
+# Retrieve predictions 
+predictions = model(train_data[:1].to_numpy())
+# Convert logits to probabilities
 tf.nn.softmax(predictions).numpy()
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(optimizer='adam',
@@ -681,7 +690,7 @@ model.fit(train_data, train_labels, epochs=5)
 # In[ ]:
 
 
-model.evaluate(dev_data,  dev_labels, verbose=2)
+# model.evaluate(dev_data,  dev_labels, verbose=2)
 
 
 # #### Ensemble
@@ -725,9 +734,9 @@ def Ensemble():
         # Assign the new prediction
         new_predictions.append(classification)
     print("Models disagreed on {0}/{1} dev examples.".format(count, dev_labels.shape[0]))
-    return np.array(new_predictions).astype(int)
+    return predicted_classes, np.array(new_predictions).astype(int)
 
-new_predictions = Ensemble()
+predicted_classes, new_predictions = Ensemble()
 mse_ensemble = mean_squared_error(dev_labels, new_predictions)
 accuracy = accuracy_score(dev_labels, new_predictions)
 print("Mean Squared Error: ", mse_ensemble)
