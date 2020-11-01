@@ -34,20 +34,57 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import accuracy_score
-import tensorflow as tf
-tf.enable_eager_execution()
 ```
 
 
 ```python
 # Mount the drive for file storage
-# from google.colab import drive
-# drive.mount('/content/drive')
+from google.colab import drive
+drive.mount('/content/drive')
 ```
 
 
+    ---------------------------------------------------------------------------
+
+    KeyError                                  Traceback (most recent call last)
+
+    <ipython-input-76-788a3662f10d> in <module>
+          1 # Mount the drive for file storage
+          2 from google.colab import drive
+    ----> 3 drive.mount('/content/drive')
+    
+
+    /opt/conda/lib/python3.7/site-packages/google/colab/drive.py in mount(mountpoint, force_remount, timeout_ms)
+         80     return
+         81 
+    ---> 82   env = _env()
+         83   home = env.home
+         84   root_dir = env.root_dir
+
+
+    /opt/conda/lib/python3.7/site-packages/google/colab/drive.py in _env()
+         41   home = _os.environ['HOME']
+         42   root_dir = _os.path.realpath(
+    ---> 43       _os.path.join(_os.environ['CLOUDSDK_CONFIG'], '../..'))
+         44   inet_family = 'IPV4_ONLY'
+         45   dev = '/dev/fuse'
+
+
+    /opt/conda/lib/python3.7/os.py in __getitem__(self, key)
+        679         except KeyError:
+        680             # raise KeyError with the original key value
+    --> 681             raise KeyError(key) from None
+        682         return self.decodevalue(value)
+        683 
+
+
+    KeyError: 'CLOUDSDK_CONFIG'
+
+
+
 ```python
-# os.chdir('/content/drive/My Drive/W207-Final-Project')
+os.chdir('/content/drive/My Drive/W207-Final-Project')
+
 ```
 
 ### Load Data
@@ -982,7 +1019,7 @@ plt.show()
 
 After the feature transformation, we see improved distinction in median values, espeically for cover type 6, where the median is notably higher than that of other cover types  and the distribution is concentrated around the median. 
 
-#### Log and Polynomial Transformations
+#### Log Transformations
 
 Now we'll log transform the features related to the distances.
 
@@ -1004,22 +1041,29 @@ train_df[fe4_cols] = np.log(train_df[fe4_cols])
 
 # Add a polynominal feature
 train_df["elv_pwd"] = train_df["Elevation"]**2
+
+# TODO: Can this be removed? We should drop id in the training data we actually use. 
+# Make a copy of train_df for modelling
+train_df1 = train_df.copy()
+# Drop Id column as it is not a meaningful feature.
+train_df.drop(columns=["Id"],inplace=True)
+test_df.drop(columns=["Id"],inplace=True)
 ```
 
     Vertical_Distance_To_Hydrology Minimum:  -146
 
 
-#### Drop Id Column
-
 
 ```python
-# TODO: Can this be removed? We should drop id in the training data we actually use. 
-# Make a copy of train_df for modelling
-train_df1 = train_df.copy()
-
-# Drop Id column as it is not a meaningful feature.
-train_df.drop(columns=["Id"],inplace=True)
-test_df.drop(columns=["Id"],inplace=True)
+# new_cat_cols =['Wilderness_Area1',
+#        'Wilderness_Area2', 'Wilderness_Area3', 'Soil_Type1', 'Soil_Type2',
+#        'Soil_Type3', 'Soil_Type4', 'Soil_Type5', 'Soil_Type13', 'Soil_Type14',
+#        'Soil_Type18', 'Soil_Type20', 'Soil_Type22', 'Soil_Type26',
+#        'Soil_Type29', 'Soil_Type30', 'Soil_Type32', 'Cover_Type', 'type2stwa4',
+#        'type6st', 'soil_type35383940', 'st10111617', 'st912', 'st3133',
+#        'st2324', 'st6w4']
+# Change data type to categorical for categorical columns
+# train_df1[new_cat_cols] = train_df1[new_cat_cols].astype("category")
 ```
 
 #### Drop Hillshade_9am
@@ -1028,13 +1072,13 @@ Hillshade_9am has a strong correlation with Hillshade_3pm and Aspect. TODO: If w
 
 
 ```python
-all_features = set(train_df.columns.to_list())
+all_features = set(train_data.columns.to_list())
 
 # Select features to drop. 
 to_drop = set(['Hillshade_9am'])
 
 sel_features = list(all_features - to_drop)
-train_df =train_df[sel_features]
+train_data =train_data[sel_features]
 ```
 
 #### Split Data into Train/Dev/Test
@@ -1055,8 +1099,8 @@ print(dev_data_df.shape)
 training_data.describe()
 ```
 
-    (12096, 53)
-    (3024, 53)
+    (12096, 54)
+    (3024, 54)
 
 
 
@@ -1080,27 +1124,27 @@ training_data.describe()
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>Soil_Type32</th>
-      <th>Cover_Type</th>
-      <th>Soil_Type2</th>
-      <th>Soil_Type16</th>
-      <th>Soil_Type23</th>
-      <th>Vertical_Distance_To_Hydrology</th>
-      <th>soil_type35383940</th>
-      <th>Horizontal_Distance_To_Roadways</th>
+      <th>Elevation</th>
       <th>Slope</th>
-      <th>Soil_Type14</th>
-      <th>...</th>
-      <th>Soil_Type13</th>
+      <th>Horizontal_Distance_To_Hydrology</th>
+      <th>Vertical_Distance_To_Hydrology</th>
+      <th>Horizontal_Distance_To_Roadways</th>
+      <th>Hillshade_9am</th>
+      <th>Hillshade_Noon</th>
       <th>Hillshade_3pm</th>
-      <th>st6w4</th>
-      <th>Soil_Type39</th>
-      <th>Soil_Type12</th>
       <th>Horizontal_Distance_To_Fire_Points</th>
-      <th>Soil_Type24</th>
-      <th>Wilderness_Area2</th>
-      <th>Soil_Type4</th>
-      <th>Wilderness_Area3</th>
+      <th>Wilderness_Area1</th>
+      <th>...</th>
+      <th>type6st</th>
+      <th>soil_type35383940</th>
+      <th>st10111617</th>
+      <th>st912</th>
+      <th>st3133</th>
+      <th>st2324</th>
+      <th>st6w4</th>
+      <th>ap_ew</th>
+      <th>ap_ns</th>
+      <th>elv_pwd</th>
     </tr>
   </thead>
   <tbody>
@@ -1125,68 +1169,68 @@ training_data.describe()
       <td>12096.000000</td>
       <td>12096.000000</td>
       <td>12096.000000</td>
-      <td>12096.00000</td>
       <td>12096.000000</td>
+      <td>1.209600e+04</td>
     </tr>
     <tr>
       <th>mean</th>
-      <td>0.045635</td>
-      <td>4.000000</td>
-      <td>0.040509</td>
-      <td>0.007523</td>
-      <td>0.049686</td>
-      <td>5.245071</td>
-      <td>0.126075</td>
-      <td>7.276575</td>
-      <td>16.449074</td>
-      <td>0.011574</td>
+      <td>2750.903853</td>
+      <td>16.502149</td>
+      <td>5.783871</td>
+      <td>5.247335</td>
+      <td>7.281635</td>
+      <td>0.833254</td>
+      <td>0.859277</td>
+      <td>0.531416</td>
+      <td>7.214563</td>
+      <td>0.240162</td>
       <td>...</td>
-      <td>0.032655</td>
-      <td>0.531023</td>
-      <td>0.352596</td>
-      <td>0.041171</td>
-      <td>0.014964</td>
-      <td>7.212667</td>
-      <td>0.016865</td>
-      <td>0.031911</td>
-      <td>0.05539</td>
-      <td>0.418981</td>
+      <td>0.141534</td>
+      <td>0.128968</td>
+      <td>0.216931</td>
+      <td>0.015460</td>
+      <td>0.063740</td>
+      <td>0.067378</td>
+      <td>0.349537</td>
+      <td>0.220804</td>
+      <td>0.143913</td>
+      <td>7.740451e+06</td>
     </tr>
     <tr>
       <th>std</th>
-      <td>0.208701</td>
-      <td>1.997642</td>
-      <td>0.197158</td>
-      <td>0.086413</td>
-      <td>0.217304</td>
-      <td>0.283198</td>
-      <td>0.331947</td>
-      <td>0.733137</td>
-      <td>8.443615</td>
-      <td>0.106963</td>
+      <td>415.924262</td>
+      <td>8.447870</td>
+      <td>0.517284</td>
+      <td>0.278580</td>
+      <td>0.735993</td>
+      <td>0.120818</td>
+      <td>0.089476</td>
+      <td>0.180397</td>
+      <td>0.649673</td>
+      <td>0.427199</td>
       <td>...</td>
-      <td>0.177740</td>
-      <td>0.179201</td>
-      <td>0.559571</td>
-      <td>0.198693</td>
-      <td>0.121412</td>
-      <td>0.649249</td>
-      <td>0.128771</td>
-      <td>0.175771</td>
-      <td>0.22875</td>
-      <td>0.493413</td>
+      <td>0.348586</td>
+      <td>0.335179</td>
+      <td>0.412172</td>
+      <td>0.123377</td>
+      <td>0.244299</td>
+      <td>0.250685</td>
+      <td>0.559938</td>
+      <td>0.679944</td>
+      <td>0.684316</td>
+      <td>2.305865e+06</td>
     </tr>
     <tr>
       <th>min</th>
-      <td>0.000000</td>
-      <td>1.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
+      <td>1863.000000</td>
       <td>0.000000</td>
       <td>4.990433</td>
+      <td>2.564949</td>
+      <td>4.990433</td>
       <td>0.000000</td>
+      <td>0.388235</td>
+      <td>0.000000</td>
+      <td>4.990433</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
@@ -1194,111 +1238,111 @@ training_data.describe()
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>4.990433</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.00000</td>
-      <td>0.000000</td>
+      <td>-1.000000</td>
+      <td>-1.000000</td>
+      <td>3.470769e+06</td>
     </tr>
     <tr>
       <th>25%</th>
-      <td>0.000000</td>
-      <td>2.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>5.023881</td>
-      <td>0.000000</td>
-      <td>6.806829</td>
+      <td>2379.750000</td>
       <td>10.000000</td>
+      <td>5.365976</td>
+      <td>5.023881</td>
+      <td>6.810142</td>
+      <td>0.768627</td>
+      <td>0.811765</td>
+      <td>0.419608</td>
+      <td>6.785588</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
-      <td>0.419608</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>6.776507</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.00000</td>
       <td>0.000000</td>
+      <td>-0.390731</td>
+      <td>-0.500000</td>
+      <td>5.663210e+06</td>
     </tr>
     <tr>
       <th>50%</th>
-      <td>0.000000</td>
-      <td>4.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>5.187386</td>
-      <td>0.000000</td>
-      <td>7.288244</td>
+      <td>2752.500000</td>
       <td>15.000000</td>
+      <td>5.789960</td>
+      <td>5.187386</td>
+      <td>7.291656</td>
+      <td>0.862745</td>
+      <td>0.874510</td>
+      <td>0.541176</td>
+      <td>7.250636</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
-      <td>0.541176</td>
       <td>0.000000</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>7.250636</td>
       <td>0.000000</td>
       <td>0.000000</td>
-      <td>0.00000</td>
       <td>0.000000</td>
+      <td>0.390731</td>
+      <td>0.258819</td>
+      <td>7.576256e+06</td>
     </tr>
     <tr>
       <th>75%</th>
-      <td>0.000000</td>
-      <td>6.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>5.420535</td>
-      <td>0.000000</td>
-      <td>7.787382</td>
+      <td>3105.000000</td>
       <td>22.000000</td>
+      <td>6.154858</td>
+      <td>5.420535</td>
+      <td>7.799753</td>
+      <td>0.921569</td>
+      <td>0.921569</td>
+      <td>0.658824</td>
+      <td>7.667743</td>
       <td>0.000000</td>
       <td>...</td>
       <td>0.000000</td>
-      <td>0.654902</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
+      <td>0.000000</td>
       <td>1.000000</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>7.669028</td>
-      <td>0.000000</td>
-      <td>0.000000</td>
-      <td>0.00000</td>
-      <td>1.000000</td>
+      <td>0.866025</td>
+      <td>0.809017</td>
+      <td>9.641025e+06</td>
     </tr>
     <tr>
       <th>max</th>
-      <td>1.000000</td>
-      <td>7.000000</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
+      <td>3849.000000</td>
+      <td>52.000000</td>
+      <td>7.306531</td>
       <td>6.552508</td>
-      <td>1.000000</td>
-      <td>8.847647</td>
-      <td>50.000000</td>
+      <td>8.851234</td>
+      <td>0.996078</td>
+      <td>0.996078</td>
+      <td>0.972549</td>
+      <td>8.873468</td>
       <td>1.000000</td>
       <td>...</td>
       <td>1.000000</td>
-      <td>0.972549</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
+      <td>1.000000</td>
       <td>2.000000</td>
       <td>1.000000</td>
       <td>1.000000</td>
-      <td>8.873468</td>
-      <td>1.000000</td>
-      <td>1.000000</td>
-      <td>1.00000</td>
-      <td>1.000000</td>
+      <td>1.481480e+07</td>
     </tr>
   </tbody>
 </table>
-<p>8 rows × 53 columns</p>
+<p>8 rows × 54 columns</p>
 </div>
 
 
@@ -1317,8 +1361,8 @@ print(train_data.shape)
 print(dev_data.shape)
 ```
 
-    (12096, 52)
-    (3024, 52)
+    (12096, 53)
+    (3024, 53)
 
 
 #### Scale Data
@@ -1356,9 +1400,9 @@ print("Dev data shape: {0} Dev labels shape: {1}\n".format(dev_data.shape, dev_d
 print("Test data shape: ", test_data.shape)
 ```
 
-    Training data shape: (12096, 52) Training labels shape: (12096,)
+    Training data shape: (12096, 53) Training labels shape: (12096,)
     
-    Dev data shape: (3024, 52) Dev labels shape: (3024, 52)
+    Dev data shape: (3024, 53) Dev labels shape: (3024, 53)
     
     Test data shape:  (565892, 54)
 
@@ -1391,36 +1435,41 @@ for num_trees in num_trees_list:
     random_forest_results[score] = probabilities
 ```
 
-    Random Forest Performance for 1 trees: 0.5651455026455027
-    Mean Squared Error:  3.693452380952381
-    Random Forest Performance for 3 trees: 0.7056878306878307
-    Mean Squared Error:  2.5400132275132274
-    Random Forest Performance for 5 trees: 0.7423941798941799
-    Mean Squared Error:  2.3392857142857144
-    Random Forest Performance for 10 trees: 0.7380952380952381
-    Mean Squared Error:  2.363095238095238
-    Random Forest Performance for 100 trees: 0.7493386243386243
-    Mean Squared Error:  2.3191137566137567
+    Random Forest Performance for 1 trees: 0.6521164021164021
+    Mean Squared Error:  3.669642857142857
+    Accuracy Score:  0.6521164021164021
+    Random Forest Performance for 3 trees: 0.7281746031746031
+    Mean Squared Error:  2.4675925925925926
+    Accuracy Score:  0.7281746031746031
+    Random Forest Performance for 5 trees: 0.748015873015873
+    Mean Squared Error:  2.371693121693122
+    Accuracy Score:  0.748015873015873
+    Random Forest Performance for 10 trees: 0.7533068783068783
+    Mean Squared Error:  2.212962962962963
+    Accuracy Score:  0.7533068783068783
+    Random Forest Performance for 100 trees: 0.769510582010582
+    Mean Squared Error:  2.050925925925926
+    Accuracy Score:  0.769510582010582
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_1.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_67_1.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_2.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_67_2.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_3.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_67_3.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_4.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_67_4.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_68_5.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_67_5.png)
 
 
 #### Naive Bayes (Bernoulli)
@@ -1447,14 +1496,14 @@ for alpha in alphas_list:
     NB(alpha)
 ```
 
-    BernoulliNB for alph = 0.01: accuracy = 0.5995370370370371
+    BernoulliNB for alph = 0.01: accuracy = 0.6187169312169312
     
     
     
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_70_1.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_69_1.png)
 
 
 
@@ -1507,36 +1556,36 @@ for neigh in neigh_list:
     knn_results[score] = probabilities 
 ```
 
-    KNN 1 neighbors : accuracy = 0.8382936507936508
-    Mean Squared Error:  1.382936507936508
-    KNN 2 neighbors : accuracy = 0.8184523809523809
-    Mean Squared Error:  1.3640873015873016
-    KNN 4 neighbors : accuracy = 0.8158068783068783
-    Mean Squared Error:  1.5148809523809523
-    KNN 7 neighbors : accuracy = 0.8062169312169312
-    Mean Squared Error:  1.7599206349206349
-    KNN 10 neighbors : accuracy = 0.7913359788359788
-    Mean Squared Error:  1.8941798941798942
+    KNN 1 neighbors : accuracy = 0.841931216931217
+    Mean Squared Error:  1.3792989417989419
+    KNN 2 neighbors : accuracy = 0.8237433862433863
+    Mean Squared Error:  1.4517195767195767
+    KNN 4 neighbors : accuracy = 0.8250661375661376
+    Mean Squared Error:  1.4599867724867726
+    KNN 7 neighbors : accuracy = 0.8171296296296297
+    Mean Squared Error:  1.5185185185185186
+    KNN 10 neighbors : accuracy = 0.8098544973544973
+    Mean Squared Error:  1.6421957671957672
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_1.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_72_1.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_2.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_72_2.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_3.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_72_3.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_4.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_72_4.png)
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_73_5.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_72_5.png)
 
 
 #### Multi-layer Perceptron
@@ -1574,12 +1623,12 @@ mlp_results[score] = probabilities
       % self.max_iter, ConvergenceWarning)
 
 
-    MLP accuracy =  0.8508597883597884
-    Mean Squared Error:  1.273478835978836
+    MLP accuracy =  0.8465608465608465
+    Mean Squared Error:  1.2400793650793651
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_75_2.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_74_2.png)
 
 
 #### Logistic Regression
@@ -1595,94 +1644,85 @@ def LR():
 LR()
 ```
 
-    Logistic Regression accuracy =  0.6841931216931217
+    Logistic Regression accuracy =  0.6990740740740741
 
 
 #### Neural Network with Tensorflow
 
 
 ```python
-
+import tensorflow as tf
 ```
 
 
 ```python
-tf.executing_eagerly()
+print(train_data.shape)
 ```
 
-
-
-
-    True
-
-
-
-
-```python
-train_data[:1].shape
-train_data.to_numpy().shape, train_labels.to_numpy().shape
-```
-
-
-
-
-    ((12096, 52), (12096,))
-
+    (12096, 53)
 
 
 
 ```python
 model = tf.keras.models.Sequential([
-  tf.keras.layers.Flatten(input_shape=(52,)),
+  tf.keras.layers.Flatten(input_shape=(1, 53)),
   tf.keras.layers.Dense(128, activation='relu'),
   tf.keras.layers.Dropout(0.2),
   tf.keras.layers.Dense(10)
 ])
 
-# Retrieve predictions 
-predictions = model(train_data[:1].to_numpy())
-# Convert logits to probabilities
+# # Retrieve predictions 
+predictions = model(train_data[:1]).numpy()
+# # Convert logits to probabilities
 tf.nn.softmax(predictions).numpy()
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(optimizer='adam',
               loss=loss_fn,
               metrics=['accuracy'])
-model.fit(train_data.to_numpy(), train_labels.to_numpy(), epochs=5)
+model.fit(train_data, train_labels, epochs=5)
 
 ```
 
-    Train on 12096 samples
+    WARNING:tensorflow:Layer dense_14 is casting an input tensor from dtype float64 to the layer's dtype of float32, which is new behavior in TensorFlow 2.  The layer has dtype float32 because its dtype defaults to floatx.
+    
+    If you intended to run this layer in float32, you can safely ignore this warning. If in doubt, this warning is likely only an issue if you are porting a TensorFlow 1.X model to TensorFlow 2.
+    
+    To change all layers to have dtype float64 by default, call `tf.keras.backend.set_floatx('float64')`. To change just this layer, pass dtype='float64' to the layer constructor. If you are the author of this layer, you can disable autocasting by passing autocast=False to the base Layer constructor.
+    
     Epoch 1/5
-    12096/12096 [==============================] - 3s 229us/sample - loss: 1.0713 - acc: 0.5930
+    WARNING:tensorflow:Model was constructed with shape (None, 1, 53) for input Tensor("flatten_7_input:0", shape=(None, 1, 53), dtype=float32), but it was called on an input with incompatible shape (32, 53).
+    WARNING:tensorflow:Model was constructed with shape (None, 1, 53) for input Tensor("flatten_7_input:0", shape=(None, 1, 53), dtype=float32), but it was called on an input with incompatible shape (32, 53).
+    378/378 [==============================] - 1s 3ms/step - loss: 1.0679 - accuracy: 0.5851
     Epoch 2/5
-    12096/12096 [==============================] - 2s 175us/sample - loss: 0.7468 - acc: 0.6924
+    378/378 [==============================] - 1s 3ms/step - loss: 0.7603 - accuracy: 0.6850
     Epoch 3/5
-    12096/12096 [==============================] - 2s 192us/sample - loss: 0.6880 - acc: 0.7173
+    378/378 [==============================] - 1s 3ms/step - loss: 0.7023 - accuracy: 0.7111
     Epoch 4/5
-    12096/12096 [==============================] - 2s 183us/sample - loss: 0.6539 - acc: 0.7281
+    378/378 [==============================] - 1s 4ms/step - loss: 0.6613 - accuracy: 0.7291
     Epoch 5/5
-    12096/12096 [==============================] - 2s 178us/sample - loss: 0.6256 - acc: 0.7423
+    378/378 [==============================] - 1s 3ms/step - loss: 0.6339 - accuracy: 0.7399
 
 
 
 
 
-    <tensorflow.python.keras.callbacks.History at 0x7f544fc89250>
+    <tensorflow.python.keras.callbacks.History at 0x7f4954e4fc50>
 
 
 
 
 ```python
-model.evaluate(dev_data.to_numpy(),  dev_labels.to_numpy(), verbose=2)
+model.evaluate(dev_data,  dev_labels, verbose=2)
 ```
 
-    3024/1 - 0s - loss: 0.7147 - acc: 0.7503
+    WARNING:tensorflow:Model was constructed with shape (None, 1, 53) for input Tensor("flatten_7_input:0", shape=(None, 1, 53), dtype=float32), but it was called on an input with incompatible shape (None, 53).
+    95/95 - 0s - loss: 0.5854 - accuracy: 0.7629
 
 
 
 
 
-    [0.6021279484506638, 0.7503307]
+    [0.5854060053825378, 0.7628968358039856]
 
 
 
@@ -1726,18 +1766,18 @@ def Ensemble():
         # Assign the new prediction
         new_predictions.append(classification)
     print("Models disagreed on {0}/{1} dev examples.".format(count, dev_labels.shape[0]))
-    return predicted_classes, np.array(new_predictions).astype(int)
+    return np.array(new_predictions).astype(int)
 
-predicted_classes, new_predictions = Ensemble()
+new_predictions = Ensemble()
 mse_ensemble = mean_squared_error(dev_labels, new_predictions)
 accuracy = accuracy_score(dev_labels, new_predictions)
 print("Mean Squared Error: ", mse_ensemble)
 print("Accuracy: ", accuracy)
 ```
 
-    Models disagreed on 878/3024 dev examples.
-    Mean Squared Error:  2.099537037037037
-    Accuracy:  0.03009259259259259
+    Models disagreed on 854/3024 dev examples.
+    Mean Squared Error:  2.136904761904762
+    Accuracy:  0.030753968253968252
 
 
 
@@ -1757,7 +1797,7 @@ axes[1,1].hist(predicted_classes[:,2], bins=7, color = 'blue')
 
 
 
-    (array([454., 268., 413., 484., 548., 383., 474.]),
+    (array([466., 256., 341., 550., 540., 425., 446.]),
      array([0.        , 0.85714286, 1.71428571, 2.57142857, 3.42857143,
             4.28571429, 5.14285714, 6.        ]),
      <BarContainer object of 7 artists>)
@@ -1765,7 +1805,7 @@ axes[1,1].hist(predicted_classes[:,2], bins=7, color = 'blue')
 
 
 
-![png](backups/clear-cut-solution_files/backups/clear-cut-solution_86_1.png)
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_84_1.png)
 
 
 ### End matter
@@ -1791,37 +1831,14 @@ axes[1,1].hist(predicted_classes[:,2], bins=7, color = 'blue')
 
 ```python
 #Create a backup of the jupyter notebook in a format for where changes are easier to see.
-!jupyter nbconvert clear_cut_solution.ipynb --to="python" --output="backups/clear-cut-solution"
-!jupyter nbconvert clear_cut_solution.ipynb --to markdown --output="backups/clear-cut-solution"
+!jupyter nbconvert clear-cut-solution.ipynb --to="python" --output="backups/clear-cut-solution"
+!jupyter nbconvert clear-cut-solution.ipynb --to markdown --output="backups/clear-cut-solution"
 
 # Also archiving this bad boy
-!jupyter nbconvert clear_cut_solution.ipynb --to html --output="backups/clear-cut-solution"
+!jupyter nbconvert clear-cut-solution.ipynb --to html --output="backups/clear-cut-solution"
 ```
 
-    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
-    [NbConvertApp] Converting notebook clear_cut_solution.ipynb to python
-    [NbConvertApp] Writing 26429 bytes to backups/clear-cut-solution.py
-    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
-    [NbConvertApp] Converting notebook clear_cut_solution.ipynb to markdown
-    [NbConvertApp] Support files will be in backups/clear-cut-solution_files/
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
-    [NbConvertApp] Writing 52450 bytes to backups/clear-cut-solution.md
 
+```python
+
+```
