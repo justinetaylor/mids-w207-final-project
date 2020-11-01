@@ -1620,20 +1620,20 @@ tf.executing_eagerly()
 
 ```python
 train_data[:1].shape
-type(train_data.to_numpy())
+train_data.to_numpy().shape, train_labels.to_numpy().shape
 ```
 
 
 
 
-    numpy.ndarray
+    ((12096, 52), (12096,))
 
 
 
 
 ```python
 model = tf.keras.models.Sequential([
-  tf.keras.layers.Flatten(input_shape=(1, 52)),
+  tf.keras.layers.Flatten(input_shape=(52,)),
   tf.keras.layers.Dense(128, activation='relu'),
   tf.keras.layers.Dropout(0.2),
   tf.keras.layers.Dense(10)
@@ -1647,63 +1647,44 @@ loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(optimizer='adam',
               loss=loss_fn,
               metrics=['accuracy'])
-model.fit(train_data, train_labels, epochs=5)
+model.fit(train_data.to_numpy(), train_labels.to_numpy(), epochs=5)
 
 ```
 
-    WARNING:tensorflow:Falling back from v2 loop because of error: Failed to find data adapter that can handle input: <class 'pandas.core.frame.DataFrame'>, <class 'NoneType'>
+    Train on 12096 samples
+    Epoch 1/5
+    12096/12096 [==============================] - 3s 229us/sample - loss: 1.0713 - acc: 0.5930
+    Epoch 2/5
+    12096/12096 [==============================] - 2s 175us/sample - loss: 0.7468 - acc: 0.6924
+    Epoch 3/5
+    12096/12096 [==============================] - 2s 192us/sample - loss: 0.6880 - acc: 0.7173
+    Epoch 4/5
+    12096/12096 [==============================] - 2s 183us/sample - loss: 0.6539 - acc: 0.7281
+    Epoch 5/5
+    12096/12096 [==============================] - 2s 178us/sample - loss: 0.6256 - acc: 0.7423
 
 
 
-    ---------------------------------------------------------------------------
-
-    ValueError                                Traceback (most recent call last)
-
-    <ipython-input-53-ce9b6a1b2b7f> in <module>
-         14               loss=loss_fn,
-         15               metrics=['accuracy'])
-    ---> 16 model.fit(train_data, train_labels, epochs=5)
-    
-
-    /opt/conda/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/training.py in fit(self, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, validation_freq, max_queue_size, workers, use_multiprocessing, **kwargs)
-        725         max_queue_size=max_queue_size,
-        726         workers=workers,
-    --> 727         use_multiprocessing=use_multiprocessing)
-        728 
-        729   def evaluate(self,
 
 
-    /opt/conda/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/training_arrays.py in fit(self, model, x, y, batch_size, epochs, verbose, callbacks, validation_split, validation_data, shuffle, class_weight, sample_weight, initial_epoch, steps_per_epoch, validation_steps, validation_freq, **kwargs)
-        641         steps=steps_per_epoch,
-        642         validation_split=validation_split,
-    --> 643         shuffle=shuffle)
-        644 
-        645     if validation_data:
+    <tensorflow.python.keras.callbacks.History at 0x7f544fc89250>
 
-
-    /opt/conda/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/training.py in _standardize_user_data(self, x, y, sample_weight, class_weight, batch_size, check_steps, steps_name, steps, validation_split, shuffle, extract_tensors_from_dataset)
-       2469           feed_input_shapes,
-       2470           check_batch_axis=False,  # Don't enforce the batch size.
-    -> 2471           exception_prefix='input')
-       2472 
-       2473     # Get typespecs for the input data and sanitize it if necessary.
-
-
-    /opt/conda/lib/python3.7/site-packages/tensorflow_core/python/keras/engine/training_utils.py in standardize_input_data(data, names, shapes, check_batch_axis, exception_prefix)
-        561                            ': expected ' + names[i] + ' to have ' +
-        562                            str(len(shape)) + ' dimensions, but got array '
-    --> 563                            'with shape ' + str(data_shape))
-        564         if not check_batch_axis:
-        565           data_shape = data_shape[1:]
-
-
-    ValueError: Error when checking input: expected flatten_2_input to have 3 dimensions, but got array with shape (12096, 52)
 
 
 
 ```python
-# model.evaluate(dev_data,  dev_labels, verbose=2)
+model.evaluate(dev_data.to_numpy(),  dev_labels.to_numpy(), verbose=2)
 ```
+
+    3024/1 - 0s - loss: 0.7147 - acc: 0.7503
+
+
+
+
+
+    [0.6021279484506638, 0.7503307]
+
+
 
 #### Ensemble
 
@@ -1754,6 +1735,11 @@ print("Mean Squared Error: ", mse_ensemble)
 print("Accuracy: ", accuracy)
 ```
 
+    Models disagreed on 878/3024 dev examples.
+    Mean Squared Error:  2.099537037037037
+    Accuracy:  0.03009259259259259
+
+
 
 ```python
 # Examine and Compare Histograms of Predictions
@@ -1767,6 +1753,20 @@ axes[1,0].hist(predicted_classes[:,1], bins=7, color = 'green')
 # Random Forest
 axes[1,1].hist(predicted_classes[:,2], bins=7, color = 'blue') 
 ```
+
+
+
+
+    (array([454., 268., 413., 484., 548., 383., 474.]),
+     array([0.        , 0.85714286, 1.71428571, 2.57142857, 3.42857143,
+            4.28571429, 5.14285714, 6.        ]),
+     <BarContainer object of 7 artists>)
+
+
+
+
+![png](backups/clear-cut-solution_files/backups/clear-cut-solution_86_1.png)
+
 
 ### End matter
 
@@ -1798,7 +1798,30 @@ axes[1,1].hist(predicted_classes[:,2], bins=7, color = 'blue')
 !jupyter nbconvert clear_cut_solution.ipynb --to html --output="backups/clear-cut-solution"
 ```
 
+    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+    [NbConvertApp] Converting notebook clear_cut_solution.ipynb to python
+    [NbConvertApp] Writing 26429 bytes to backups/clear-cut-solution.py
+    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+    [NbConvertApp] Converting notebook clear_cut_solution.ipynb to markdown
+    [NbConvertApp] Support files will be in backups/clear-cut-solution_files/
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Making directory backups/clear-cut-solution_files/backups
+    [NbConvertApp] Writing 52450 bytes to backups/clear-cut-solution.md
 
-```python
-
-```

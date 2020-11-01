@@ -659,18 +659,18 @@ LR()
 tf.executing_eagerly()
 
 
-# In[52]:
+# In[57]:
 
 
 train_data[:1].shape
-type(train_data.to_numpy())
+train_data.to_numpy().shape, train_labels.to_numpy().shape
 
 
-# In[53]:
+# In[61]:
 
 
 model = tf.keras.models.Sequential([
-  tf.keras.layers.Flatten(input_shape=(1, 52)),
+  tf.keras.layers.Flatten(input_shape=(52,)),
   tf.keras.layers.Dense(128, activation='relu'),
   tf.keras.layers.Dropout(0.2),
   tf.keras.layers.Dense(10)
@@ -684,20 +684,20 @@ loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 model.compile(optimizer='adam',
               loss=loss_fn,
               metrics=['accuracy'])
-model.fit(train_data, train_labels, epochs=5)
+model.fit(train_data.to_numpy(), train_labels.to_numpy(), epochs=5)
 
 
-# In[ ]:
+# In[63]:
 
 
-# model.evaluate(dev_data,  dev_labels, verbose=2)
+model.evaluate(dev_data.to_numpy(),  dev_labels.to_numpy(), verbose=2)
 
 
 # #### Ensemble
 # 
 # Here we will combine the three best performing models and implement a "voting" system to try to improve accuracy. 
 
-# In[ ]:
+# In[64]:
 
 
 def Ensemble():
@@ -743,7 +743,7 @@ print("Mean Squared Error: ", mse_ensemble)
 print("Accuracy: ", accuracy)
 
 
-# In[ ]:
+# In[65]:
 
 
 # Examine and Compare Histograms of Predictions
@@ -787,10 +787,4 @@ get_ipython().system('jupyter nbconvert clear_cut_solution.ipynb --to markdown -
 
 # Also archiving this bad boy
 get_ipython().system('jupyter nbconvert clear_cut_solution.ipynb --to html --output="backups/clear-cut-solution"')
-
-
-# In[ ]:
-
-
-
 
