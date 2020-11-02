@@ -9,7 +9,7 @@
 # ## Initial Setup
 # #### Import Required Libraries
 
-# In[1]:
+# In[31]:
 
 
 # This tells matplotlib not to try opening a new window for each plot.
@@ -29,10 +29,27 @@ import models
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import accuracy_score
 
+# So we can reload packages without restarting the kernel
+import importlib
+
+
+# In[32]:
+
+
+# If you update the feature_engineering package, run this line so it updates without needing to restart the kernel
+importlib.reload(fe)
+
+
+# In[33]:
+
+
+# If you update the models package, run this line so it updates without needing to restart the kernel
+importlib.reload(models)
+
 
 # #### Load Data
 
-# In[2]:
+# In[34]:
 
 
 # Read in training data 
@@ -71,7 +88,7 @@ train_df = pd.read_csv("data/train.csv")
 # - TODO: We'll also drop "Vertical_Distance_To_Hydrology" because _.
 # 
 
-# In[3]:
+# In[35]:
 
 
 def manipulate_data(data):
@@ -112,7 +129,7 @@ train_df = manipulate_data(train_df)
 
 # #### Examine transformed data
 
-# In[ ]:
+# In[36]:
 
 
 train_df.describe()
@@ -120,7 +137,7 @@ train_df.describe()
 
 # Now that the data is transformed, we can also visualize the new aspect features. 
 
-# In[ ]:
+# In[37]:
 
 
 # Visualize cover type VS the cosine of Aspect degerees
@@ -136,7 +153,7 @@ plt.show()
 # 
 # Then, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
 
-# In[ ]:
+# In[38]:
 
 
 train_data, train_labels, dev_data, dev_labels = fe.split_data(train_df)
@@ -144,7 +161,7 @@ train_data, train_labels, dev_data, dev_labels = fe.split_data(train_df)
 
 # #### Scale the data to have a mean of 0 and a variance of 1.
 
-# In[ ]:
+# In[39]:
 
 
 standardize_features = ['Elevation','Slope', 'Horizontal_Distance_To_Hydrology',
@@ -156,7 +173,7 @@ dev_data = fe.scale_non_training_data(standardize_features, dev_data, train_scal
 
 # #### Explore and confirm the shape of the data
 
-# In[ ]:
+# In[40]:
 
 
 print("Training data shape: {0} Training labels shape: {1}\n".format(train_data.shape, train_labels.shape))
@@ -167,7 +184,7 @@ print("Dev data shape: {0} Dev labels shape: {1}\n".format(dev_data.shape, dev_l
 
 # #### Random Forest
 
-# In[ ]:
+# In[41]:
 
 
 num_trees_list = [1,3,5,10,100]
@@ -181,7 +198,7 @@ for num_trees in num_trees_list:
 
 # #### K-Nearest Neighbors
 
-# In[ ]:
+# In[42]:
 
 
 neighbor_list = [1,2,4, 7, 10]
@@ -196,7 +213,7 @@ for neighbor in neighbor_list:
 
 # #### Multi-Layer Perceptron
 
-# In[ ]:
+# In[43]:
 
 
 mlp_results = {}
@@ -206,7 +223,7 @@ mlp_results[score] = probabilities
 
 # #### Logistic Regression
 
-# In[ ]:
+# In[44]:
 
 
 models.logistic_regression(train_data, train_labels, dev_data, dev_labels)
@@ -214,16 +231,16 @@ models.logistic_regression(train_data, train_labels, dev_data, dev_labels)
 
 # #### Neural Network 
 
-# In[ ]:
+# In[45]:
 
 
-# models.neural_network(train_data, train_labels, dev_data, dev_labels)
+models.neural_network(train_data, train_labels, dev_data, dev_labels)
 
 
 # #### Ensemble
 # Here we will combine the three best performing models and implement a "voting" system to try to improve accuracy.
 
-# In[ ]:
+# In[46]:
 
 
 predicted_classes, new_predictions = models.ensemble(mlp_results,knn_results,random_forest_results, dev_labels)
@@ -235,7 +252,7 @@ print("Accuracy: ", accuracy)
 
 # #### Examine and Compare Histograms of Predictions
 
-# In[ ]:
+# In[47]:
 
 
 fig, axes = plt.subplots(2,2)
@@ -252,7 +269,7 @@ axes[1,1].hist(predicted_classes[:,2], bins=7, color = 'blue')
 # ## Test Results
 # #### Read in test data
 
-# In[ ]:
+# In[48]:
 
 
 # Read in training data 
@@ -263,7 +280,7 @@ test_df_ID = test_data["Id"]
 
 # #### Apply the same transformations
 
-# In[ ]:
+# In[49]:
 
 
 test_data = manipulate_data(test_data)
@@ -273,9 +290,9 @@ test_data = fe.scale_non_training_data(standardize_features, test_data, train_sc
 # In[ ]:
 
 
-# random_forest_predictions = random_forest_models[-1].predict(test_data)
-# knn_predictions = knn_models[0].predict(test_data)
-# mlp_predictions = mlp_model.predict(test_data)
+random_forest_predictions = random_forest_models[-1].predict(test_data)
+knn_predictions = knn_models[0].predict(test_data)
+mlp_predictions = mlp_model.predict(test_data)
 
 
 # #### Generate Submission File
@@ -283,13 +300,13 @@ test_data = fe.scale_non_training_data(standardize_features, test_data, train_sc
 # In[ ]:
 
 
-# def gen_submission(y_pred,model):
-#     result = pd.DataFrame.from_dict(dict(zip(test_df_ID.to_list(),y_pred)), orient='index', columns=["Cover_Type"])
-#     result.to_csv(f"submissions/submission{model}.csv",index_label="Id")
+def gen_submission(y_pred,model):
+    result = pd.DataFrame.from_dict(dict(zip(test_df_ID.to_list(),y_pred)), orient='index', columns=["Cover_Type"])
+    result.to_csv(f"submissions/submission{model}.csv",index_label="Id")
 
-# gen_submission(random_forest_predictions, model="RandomForest")
-# gen_submission(knn_predictions, model="KNN")
-# gen_submission(mlp_predictions, model="MLP")
+gen_submission(random_forest_predictions, model="RandomForest")
+gen_submission(knn_predictions, model="KNN")
+gen_submission(mlp_predictions, model="MLP")
 
 
 # ### End matter
