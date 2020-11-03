@@ -32,7 +32,7 @@ def scale_hillside(data):
     return data
 
 
-def combine_environment_features_ct12(data):
+def combine_environment_features(data):
     """
     This function creates new features by combining features that are common to specific environments (and canopy types).
 
@@ -58,22 +58,6 @@ def combine_environment_features_ct12(data):
     # but fewer under cover type 1, none under cover type 5
     data["st_912"] = data["Soil_Type12"] + data["Soil_Type9"]
 
-    return data
-
-def combine_environment_features_ct36(data):
-    """
-    This function creates new features by combining features that are common to specific environments (and canopy types).
-
-    Parameters
-    ----------
-    data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-
-    Returns
-    -------
-    data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-    """
     # Combine soil type 20, 23, 24, 31, 33 and 34 as only cover type 6 appears
     # under these features but not cover type 3.
     data["type6st"] = data["Soil_Type20"] + data["Soil_Type23"] + data["Soil_Type24"] + \
@@ -98,16 +82,19 @@ def drop_unseen_soil_types(data):
     """
     # Remove soil type 7 and 15 due to no data
     data.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
-    # Remove soil type 19, 37, 21, 27,36 due to low frequency in training data -
+    # Remove soil type 19, 37, 34, 21, 27,36,28,8,25 due to no limited data -
     # TODO: should we be dropping these?
     data.drop(
         columns=[
             "Soil_Type19",
             "Soil_Type37",
+            "Soil_Type34",
             "Soil_Type21",
             "Soil_Type27",
-            "Soil_Type36"
-            ],
+            "Soil_Type36",
+            "Soil_Type28",
+            "Soil_Type8",
+            "Soil_Type25"],
         inplace=True)
     return data
 
@@ -235,7 +222,7 @@ def set_soil_type_by_attributes(data):
     # transform the soil features. Put them into a dataframe.
     trans_soil = np.matmul(soil_cols, xform)
     trans_soil_df = pd.DataFrame(data=trans_soil, columns=new_cats)
-    # display(trans_soil_df)
+    display(trans_soil_df)
 
     # Remove the features that have very low occurence rates
 
@@ -248,13 +235,13 @@ def set_soil_type_by_attributes(data):
     high_occ_names = [
         entry for entry in high_occ_ser.index if high_occ_ser[entry]]
     trans_soil_df = trans_soil_df[high_occ_names]
-    # display(trans_soil_df)
+    display(trans_soil_df)
 
     # combine the new soil features with the existing freatures in a single df
     data = data.drop(columns=og_soil_col_names)
     data = pd.concat([data, trans_soil_df], axis=1)
-    # data = data[[col for col in data if col not in ["Cover_Type"]] +
-                # ["Cover_Type"]]  # want cover type as last column
+    data = data[[col for col in data if col not in ["Cover_Type"]] +
+                ["Cover_Type"]]  # want cover type as last column
 
     return data
 
@@ -433,28 +420,3 @@ def scale_non_training_data(cols, data, scaler):
     data[cols] = scaler.transform(data[cols])
 
     return data
-
-
-def subset_data(data):
-    """
-    This function groups cover type 1 and 2 data, cover type 3 and 6 data 
-    into 2 spearate datasets and change the label to "12" and "36" in the main data set.
-
-    Parameters
-    ----------
-    data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-
-    Returns
-    -------
-    data: pd.DataFrame
-        The main dataset, and 2 separate subsets
-    """
-    data["New_Cover"] = np.where(data["Cover_Type"].apply(lambda x: x in [1,2]), 12,np.where(data["Cover_Type"].apply(lambda x: x in [3,6]), 36, data["Cover_Type"]))
-    train_data_12 = data[data["New_Cover"] == 12]
-    train_data_36 = data[data["New_Cover"] == 36]
-    data.drop(columns=["Cover_Type"],inplace=True)
-    data.rename(columns={"New_Cover": "Cover_Type"}, inplace=True)
-    train_data_12.drop(columns=["New_Cover"],inplace=True)
-    train_data_36.drop(columns=["New_Cover"],inplace=True)
-    return data, train_data_12, train_data_36
