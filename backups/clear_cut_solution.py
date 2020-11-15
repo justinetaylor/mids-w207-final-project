@@ -4,13 +4,21 @@
 # # Forest Cover Type Prediction
 # #### Team: Clear-Cut Solution: Kevin Martin, Yang Jing, Justine Schabel
 
-# TODO: Introduce the project 
+# **Todo** write a (better) intro    ;-]
+# 
+# This noteboook documents the development of a predictive model to determine the type of forest cover within national forests in the state of Colorado given various geographic location characteristics. 
+# 
+# We quickly determined that the most difficult cover types to distinguish betweeen are type 1 and 2. We focused particular attention on developing a model that could pick the 2 of them apart.
 
 # ## Initial Setup
 # #### Import Required Libraries
 
-# In[31]:
+# In[1]:
 
+
+#surpress warning messages
+import warnings
+warnings.filterwarnings("ignore")
 
 # This tells matplotlib not to try opening a new window for each plot.
 get_ipython().run_line_magic('matplotlib', 'inline')
@@ -28,32 +36,35 @@ import models
 
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import accuracy_score
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import plot_confusion_matrix
 
 # So we can reload packages without restarting the kernel
 import importlib
 
 
-# In[32]:
+# In[2]:
 
 
 # If you update the feature_engineering package, run this line so it updates without needing to restart the kernel
 importlib.reload(fe)
 
 
-# In[33]:
-
-
-# If you update the models package, run this line so it updates without needing to restart the kernel
-importlib.reload(models)
-
-
 # #### Load Data
 
-# In[34]:
+# In[3]:
 
 
 # Read in training data 
 train_df = pd.read_csv("data/train.csv")
+
+# Read in training data 
+test_data = pd.read_csv("data/test.csv")
+# Preserve testing df ID for submission purpose
+test_df_ID = test_data["Id"]
+
+#make a copy for testing subsets
+test_data1 = test_data.copy() 
 
 
 # ## Feature Engineering 
@@ -77,18 +88,25 @@ train_df = pd.read_csv("data/train.csv")
 # TODO: Explain aspect problem and solution
 # 
 # #### Log transformations
-# TODO: Now we'll log transform the features related to the distances. (explain why)
+# Per EDA, we noticed the distribution of the "distance" related variables are skewed. Now we'll log transform the features related to the distances to make the distribution smoother, and thus decrease the variances of the predictions.
 # 
 # #### Add polynomial features
-# TODO: Explain why we're making Elevation polynomial
+# Per EDA, Elevation is a numerical variable and there is a clearer distinciton in Elevation among the dependenet variable, cover type. To imporve the signal, we sqaured Elevation. 
 # 
 # #### Drop irrelevant or problematic features
 # - We'll drop "Id" because it does not provide any meaning in the classifications.
 # - We'll drop "Hillshade_9am" because it has a high correlation with "Aspect" and "Hillshade_3pm".
-# - TODO: We'll also drop "Vertical_Distance_To_Hydrology" because _.
+# - We'll also drop "Vertical_Distance_To_Hydrology" because it does not show much distinction among the "Cover Types" and has a very skewed distribution, with negative values in some cases. The variable offers little insight and there might be data issues in this variable. 
 # 
 
-# In[35]:
+# In[4]:
+
+
+#subset trainning data into subsets to improve model accurracy with cover type 1&2, and 3&6.
+train_df, train_df_12, train_df_36 = fe.subset_data(train_df)
+
+
+# In[5]:
 
 
 def manipulate_data(data):
@@ -100,11 +118,6 @@ def manipulate_data(data):
     """
     data = fe.scale_hillside(data)
     
-    # Soil Combination One (based on distributions)
-    data = fe.combine_environment_features(data)
-    data = fe.drop_unseen_soil_types(data)  
-    data = fe.combine_soil_types(data)
-      
     
     # Soil Combination Two (based on descriptions)
     # data = fe.set_soil_type_by_attributes(data)
@@ -125,11 +138,63 @@ def manipulate_data(data):
     return data
 
 train_df = manipulate_data(train_df)
+train_df_12 = manipulate_data(train_df_12)
+train_df_36 = manipulate_data(train_df_36)
+
+
+# In[6]:
+
+
+def manipulate_ct12(data):
+    """ 
+    This function applys additional transformations on the input data set for cover type 1 and 2
+    
+    Parameters: 
+        data (dataframe): n_examples x m_features (int64) dataframe 
+    """
+        
+    # Soil Combination One (based on distributions)
+    data = fe.combine_environment_features_ct12(data)
+    data = fe.drop_unseen_soil_types(data)  
+    data = fe.combine_soil_types(data)
+      
+    
+    # Soil Combination Two (based on descriptions)
+    # data = fe.set_soil_type_by_attributes(data)
+    
+    return data
+
+train_df_12 = manipulate_ct12(train_df_12)
+
+
+# In[7]:
+
+
+def manipulate_ct36(data):
+    """ 
+    This function applys additional transformations on the input data set for cover type 1 and 2
+    
+    Parameters: 
+        data (dataframe): n_examples x m_features (int64) dataframe 
+    """
+        
+    # Soil Combination One (based on distributions)
+    data = fe.combine_environment_features_ct36(data)
+    data = fe.drop_unseen_soil_types(data)  
+    data = fe.combine_soil_types(data)
+      
+    
+    # Soil Combination Two (based on descriptions)
+    # data = fe.set_soil_type_by_attributes(data)
+    
+    return data
+
+train_df_36 = manipulate_ct36(train_df_36)
 
 
 # #### Examine transformed data
 
-# In[36]:
+# In[8]:
 
 
 train_df.describe()
@@ -137,7 +202,7 @@ train_df.describe()
 
 # Now that the data is transformed, we can also visualize the new aspect features. 
 
-# In[37]:
+# In[9]:
 
 
 # Visualize cover type VS the cosine of Aspect degerees
@@ -153,15 +218,17 @@ plt.show()
 # 
 # Then, we split the training data into a training data set (80%) and development data set (20%). We will also have a large, separate test data set. 
 
-# In[38]:
+# In[10]:
 
 
 train_data, train_labels, dev_data, dev_labels = fe.split_data(train_df)
+train_data12, train_labels12, dev_data12, dev_labels12  = fe.split_data(train_df_12)
+train_data36, train_labels36, dev_data36, dev_labels36  = fe.split_data(train_df_36)
 
 
 # #### Scale the data to have a mean of 0 and a variance of 1.
 
-# In[39]:
+# In[11]:
 
 
 standardize_features = ['Elevation','Slope', 'Horizontal_Distance_To_Hydrology',
@@ -170,10 +237,17 @@ standardize_features = ['Elevation','Slope', 'Horizontal_Distance_To_Hydrology',
 train_data, train_scaler = fe.scale_training_data(standardize_features, train_data, scaler_type="standard")
 dev_data = fe.scale_non_training_data(standardize_features, dev_data, train_scaler)
 
+#generate scaling models for separate subsets 
+train_data12, train_12_scaler = fe.scale_training_data(standardize_features, train_data12, scaler_type="standard")
+train_data36, train_36_scaler = fe.scale_training_data(standardize_features, train_data36, scaler_type="standard")
+
+dev_data12 = fe.scale_non_training_data(standardize_features, dev_data12, train_12_scaler)
+dev_data36 = fe.scale_non_training_data(standardize_features, dev_data36, train_36_scaler)
+
 
 # #### Explore and confirm the shape of the data
 
-# In[40]:
+# In[12]:
 
 
 print("Training data shape: {0} Training labels shape: {1}\n".format(train_data.shape, train_labels.shape))
@@ -184,10 +258,11 @@ print("Dev data shape: {0} Dev labels shape: {1}\n".format(dev_data.shape, dev_l
 
 # #### Random Forest
 
-# In[41]:
+# In[13]:
 
 
-num_trees_list = [1,3,5,10,100]
+# num_trees_list = [1,3,5,10,100]
+num_trees_list = [100]
 random_forest_models = []
 random_forest_results = {}
 for num_trees in num_trees_list:
@@ -198,10 +273,11 @@ for num_trees in num_trees_list:
 
 # #### K-Nearest Neighbors
 
-# In[42]:
+# In[14]:
 
 
-neighbor_list = [1,2,4, 7, 10]
+# neighbor_list = [1,2,4, 7, 10]
+neighbor_list = [1]
 knn_models = []
 knn_results = {}
 for neighbor in neighbor_list:
@@ -213,7 +289,7 @@ for neighbor in neighbor_list:
 
 # #### Multi-Layer Perceptron
 
-# In[43]:
+# In[15]:
 
 
 mlp_results = {}
@@ -221,9 +297,98 @@ score, probabilities,mlp_model = models.multi_layer_perceptron(train_data, train
 mlp_results[score] = probabilities 
 
 
+# #### Generate Subset test df for testing results
+
+# #### Apply the same transformations
+
+# In[16]:
+
+
+test_data = manipulate_data(test_data)
+test_data = fe.scale_non_training_data(standardize_features, test_data, train_scaler)
+
+
+# In[17]:
+
+
+#generate subset df for spearte testing.
+y_pred = mlp_model.predict(test_data)
+def gen_subset_test(y_pred):
+    result = pd.DataFrame.from_dict(dict(zip(test_df_ID.to_list(),y_pred)), orient='index', columns=["Cover_Type"])
+    type12_id = result[result.Cover_Type==12].index.to_list()
+    type36_id = result[result.Cover_Type==36].index.to_list()
+    test_12 = test_data1[test_data1.Id.isin(type12_id)]
+    test_36 = test_data1[test_data1.Id.isin(type36_id)]
+    test_12_id = test_12.Id
+    test_36_id = test_36.Id
+    return test_12, test_36, result, test_12_id, test_36_id
+test_12, test_36, result, test_12_id, test_36_id = gen_subset_test(y_pred)
+
+
+# In[18]:
+
+
+#transofrm and scale the subset data with the respective scalers
+test_12 = manipulate_data(test_12)
+test_36 = manipulate_data(test_36)
+test_12 = fe.scale_non_training_data(standardize_features, test_12, train_12_scaler)
+test_36 = fe.scale_non_training_data(standardize_features, test_36, train_36_scaler)
+
+#additional feature engineering for each subset
+test_12 = manipulate_ct12(test_12)
+test_36 = manipulate_ct36(test_36)
+
+
+# In[19]:
+
+
+#run the mlp model for subset of cover type 1 and 2
+def subset_12():
+    """This funciton trains a MLP model specifically on cover type 1 and 2 datasets"""
+    model = MLPClassifier(alpha=1e-3, hidden_layer_sizes=(200,), random_state=0, max_iter=200) 
+    model.fit(train_data12, train_labels12) 
+    predictions = model.predict(dev_data12)
+    ypred12 = model.predict(test_12)
+    res12 = pd.DataFrame.from_dict(dict(zip(test_12_id.to_list(),ypred12)), orient='index', columns=["Cover_Type"])
+    score = model.score(dev_data12, dev_labels12)
+    probabilities = model.predict_proba(dev_data12)
+    plot_confusion_matrix(model, dev_data12, dev_labels12, values_format = "d")
+    plt.title("CT 1_2 Confusion Matrix")
+    plt.plot()
+    print("CT 1_2 accuracy = ",score)
+    mse_nn = mean_squared_error(dev_labels12, predictions)
+    print("Mean Squared Error: ", mse_nn)
+           
+    return score, probabilities, res12
+score12, prob12, res12 = subset_12()
+
+
+# In[20]:
+
+
+def subset_36():
+    """This funciton trains a MLP model specifically on cover type 3 and 6 datasets"""
+    model = MLPClassifier(alpha=1e-3, hidden_layer_sizes=(200,), random_state=0, max_iter=200) 
+    model.fit(train_data36, train_labels36) 
+    predictions = model.predict(dev_data36)
+    ypred36 = model.predict(test_36)
+    res36 = pd.DataFrame.from_dict(dict(zip(test_36_id.to_list(),ypred36)), orient='index', columns=["Cover_Type"])
+    score = model.score(dev_data36, dev_labels36)
+    probabilities = model.predict_proba(dev_data36)
+    plot_confusion_matrix(model, dev_data36, dev_labels36, values_format = "d")
+    plt.title("MLP Confusion Matrix")
+    plt.plot()
+    print("MLP accuracy = ",score)
+    mse_nn = mean_squared_error(dev_labels36, predictions)
+    print("Mean Squared Error: ", mse_nn)
+           
+    return score, probabilities, res36, ypred36
+score36, prob36, res36, ypred36 = subset_36()
+
+
 # #### Logistic Regression
 
-# In[44]:
+# In[21]:
 
 
 models.logistic_regression(train_data, train_labels, dev_data, dev_labels)
@@ -231,16 +396,16 @@ models.logistic_regression(train_data, train_labels, dev_data, dev_labels)
 
 # #### Neural Network 
 
-# In[45]:
+# In[22]:
 
 
-models.neural_network(train_data, train_labels, dev_data, dev_labels)
+# models.neural_network(train_data, train_labels, dev_data, dev_labels)
 
 
 # #### Ensemble
 # Here we will combine the three best performing models and implement a "voting" system to try to improve accuracy.
 
-# In[46]:
+# In[23]:
 
 
 predicted_classes, new_predictions = models.ensemble(mlp_results,knn_results,random_forest_results, dev_labels)
@@ -252,7 +417,7 @@ print("Accuracy: ", accuracy)
 
 # #### Examine and Compare Histograms of Predictions
 
-# In[47]:
+# In[24]:
 
 
 fig, axes = plt.subplots(2,2)
@@ -266,47 +431,30 @@ axes[1,0].hist(predicted_classes[:,1], bins=7, color = 'green')
 axes[1,1].hist(predicted_classes[:,2], bins=7, color = 'blue') 
 
 
-# ## Test Results
-# #### Read in test data
+# ### Test Results
 
-# In[48]:
-
-
-# Read in training data 
-test_data = pd.read_csv("data/test.csv")
-# Preserve testing df ID for submission purpose
-test_df_ID = test_data["Id"]
+# In[25]:
 
 
-# #### Apply the same transformations
-
-# In[49]:
-
-
-test_data = manipulate_data(test_data)
-test_data = fe.scale_non_training_data(standardize_features, test_data, train_scaler)
-
-
-# In[ ]:
-
-
-random_forest_predictions = random_forest_models[-1].predict(test_data)
-knn_predictions = knn_models[0].predict(test_data)
-mlp_predictions = mlp_model.predict(test_data)
+#generate predictions for test data
+# random_forest_predictions = random_forest_models[-1].predict(test_data)
+# knn_predictions = knn_models[0].predict(test_data)
+# mlp_predictions = mlp_model.predict(test_data)
+final_file = result[result.Cover_Type.isin([4,5,7])].append(res36).append(res12)
 
 
 # #### Generate Submission File
 
-# In[ ]:
+# In[26]:
 
 
-def gen_submission(y_pred,model):
-    result = pd.DataFrame.from_dict(dict(zip(test_df_ID.to_list(),y_pred)), orient='index', columns=["Cover_Type"])
-    result.to_csv(f"submissions/submission{model}.csv",index_label="Id")
+def gen_submission(file):
+#     result = pd.DataFrame.from_dict(dict(zip(test_df_ID.to_list(),y_pred)), orient='index', columns=["Cover_Type"])
+    file.to_csv(f"submissions/cobsolidated_submission.csv",index_label="Id")
 
-gen_submission(random_forest_predictions, model="RandomForest")
-gen_submission(knn_predictions, model="KNN")
-gen_submission(mlp_predictions, model="MLP")
+# gen_submission(random_forest_predictions, model="RandomForest")
+# gen_submission(knn_predictions, model="KNN")
+gen_submission(final_file)
 
 
 # ### End matter
@@ -329,7 +477,7 @@ gen_submission(mlp_predictions, model="MLP")
 # 
 # *because sometimes you just want to look at the markdown or whatever real quick*
 
-# In[ ]:
+# In[27]:
 
 
 #Create a backup of the jupyter notebook in a format for where changes are easier to see.
@@ -338,4 +486,10 @@ get_ipython().system('jupyter nbconvert clear_cut_solution.ipynb --to markdown -
 
 # Also archiving this bad boy
 get_ipython().system('jupyter nbconvert clear_cut_solution.ipynb --to html --output="backups/clear_cut_solution"')
+
+
+# In[ ]:
+
+
+
 

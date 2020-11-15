@@ -1,4 +1,5 @@
 # mids-w207-final-project
+
 - Team Name: Clear Cut Solution 
 - Kaggle Project: https://www.kaggle.com/c/forest-cover-type-prediction
 - Class Spreadsheet: https://docs.google.com/spreadsheets/d/17Tett3QC_26hajUqKjYoVULeok2bLiaLSu3M7Y8WTso/edit?skip_itp2_check=true#gid=0
@@ -120,7 +121,7 @@ gcloud compute ssh --project $PROJECT_ID --zone $ZONE \
 
 *If you want to go to your jupyterlab environment that you normally access via the notebook interface, you can change both of the `8889`s to `8080`s*
 
-*Note, all of this is slightly modified version of instructions from this google website (https://cloud.google.com/ai-platform/notebooks/docs/ssh-access)
+*Note, all of this is slightly modified version of instructions from this google website (https://cloud.google.com/ai-platform/notebooks/docs/ssh-access)*
 
 **Step 3:** Go to your notebook.
 
