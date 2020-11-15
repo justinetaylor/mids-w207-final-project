@@ -22,7 +22,6 @@ import os
 import re
 import warnings
 warnings.simplefilter("ignore")
-
 ```
 
 
@@ -392,7 +391,9 @@ plt.show()
 
 
 
+    
 ![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_14_1.png)
+    
 
 
 Here we can see that the training data has a somewhat uniform distribution of covertype and this tells us that our data set is balanced. 
@@ -444,7 +445,9 @@ for i in range(col_count):
 ```
 
 
+    
 ![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_21_0.png)
+    
 
 
 Here we can see the distribution are skewed for a few variables, espcially in the "distance" related ones, such as "Horizontal_Diestance_To_Fire_points". A log-transformation may improve the model performance. Also, there are zeros in these variables, we need to add 1 before performing the log transofrmation.
@@ -461,7 +464,9 @@ for i in range(col_count):
 ```
 
 
+    
 ![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_23_0.png)
+    
 
 
 First, we can see there is a relationship between the cover type and elevation. The difference in the other fetures by cover type seem less significant. Cover type 1 and 2 share a lot of similar features. We need to find a way to magnify the signal between the 2 cover types. 
@@ -529,7 +534,9 @@ plt.show()
 ```
 
 
+    
 ![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_28_0.png)
+    
 
 
 From the above, "Hillshade_9am" has strong correlation with "Hillshade_3pm" and "Aspect". We may drop this feature to avoid multi-collinearity.
@@ -1059,10 +1066,13 @@ fig, axes = plt.subplots(19,2,figsize=(24,120))
 for i in range(len(st_list)):
     sns.violinplot(y=train_df['Cover_Type'],x=train_df[st_list[i]], ax=axes[i//2,i%2])
 plt.show()
+
 ```
 
 
+    
 ![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_35_0.png)
+    
 
 
 Here we can examine the relationship between soil type and cover type for each soil type. # TODO: Discuss more
@@ -1083,7 +1093,9 @@ plt.show()
 ```
 
 
+    
 ![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_39_0.png)
+    
 
 
 ### End matter
@@ -1109,24 +1121,27 @@ plt.show()
 
 ```python
 #Create a backup of the jupyter notebook in a format for where changes are easier to see.
-!jupyter nbconvert c.ipynb --to="python" --output="backups/clear-cut-solution-EDA"
-!jupyter nbconvert clear_cut_solution-EDA.ipynb --to markdown --output="backups/clear-cut-solution-EDA"
+!jupyter nbconvert exploratory_data_analysis.ipynb --to="python" --output="backups/exploratory_data_analysis"
+!jupyter nbconvert exploratory_data_analysis.ipynb --to markdown --output="backups/exploratory_data_analysis"
 
 # Also archiving this bad boy
-!jupyter nbconvert clear_cut_solution-EDA.ipynb --to html --output="backups/clear-cut-solution-EDA"
+!jupyter nbconvert exploratory_data_analysis.ipynb --to html --output="backups/exploratory_data_analysis"
 ```
 
-    [NbConvertApp] Converting notebook clear_cut_solution-EDA.ipynb to python
-    [NbConvertApp] Writing 9823 bytes to backups\clear-cut-solution-EDA.py
-    [NbConvertApp] Converting notebook clear_cut_solution-EDA.ipynb to markdown
-    [NbConvertApp] Support files will be in backups/clear-cut-solution-EDA_files\
-    [NbConvertApp] Making directory backups/clear-cut-solution-EDA_files\backups
-    [NbConvertApp] Making directory backups/clear-cut-solution-EDA_files\backups
-    [NbConvertApp] Making directory backups/clear-cut-solution-EDA_files\backups
-    [NbConvertApp] Making directory backups/clear-cut-solution-EDA_files\backups
-    [NbConvertApp] Making directory backups/clear-cut-solution-EDA_files\backups
-    [NbConvertApp] Making directory backups/clear-cut-solution-EDA_files\backups
-    [NbConvertApp] Writing 28742 bytes to backups\clear-cut-solution-EDA.md
-    [NbConvertApp] Converting notebook clear_cut_solution-EDA.ipynb to html
-    [NbConvertApp] Writing 2712126 bytes to backups\clear-cut-solution-EDA.html
+    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+    [NbConvertApp] Converting notebook exploratory_data_analysis.ipynb to python
+    [NbConvertApp] Writing 9803 bytes to backups/exploratory_data_analysis.py
+    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+    [NbConvertApp] Converting notebook exploratory_data_analysis.ipynb to markdown
+    [NbConvertApp] Support files will be in backups/exploratory_data_analysis_files/
+    [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
+    [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
+    [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
+    [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
+    [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
+    [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
+    [NbConvertApp] Writing 29724 bytes to backups/exploratory_data_analysis.md
+    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+    [NbConvertApp] Converting notebook exploratory_data_analysis.ipynb to html
+    [NbConvertApp] Writing 2414368 bytes to backups/exploratory_data_analysis.html
 

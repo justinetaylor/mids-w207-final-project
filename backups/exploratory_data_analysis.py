@@ -216,7 +216,7 @@ df1
 
 # As we can see in the pivot table above, there are similar combinations of soil types for different "cover type". We'll combine the soil types that share same "cover types" to reduce dimensionality. Further, "cover type 1" and "cover type 2" , "cover type 3" and "cover type 6" share many overlapping features. To magnify the signal, we'll combine features as an extra feature where there is a difference between the 2 pairs of cover types.
 
-# In[16]:
+# In[24]:
 
 
 # Visualize the distribution of soil type and "cover type"
@@ -278,9 +278,9 @@ plt.show()
 
 
 #Create a backup of the jupyter notebook in a format for where changes are easier to see.
-get_ipython().system('jupyter nbconvert c.ipynb --to="python" --output="backups/clear-cut-solution-EDA"')
-get_ipython().system('jupyter nbconvert clear_cut_solution-EDA.ipynb --to markdown --output="backups/clear-cut-solution-EDA"')
+get_ipython().system('jupyter nbconvert exploratory_data_analysis.ipynb --to="python" --output="backups/exploratory_data_analysis"')
+get_ipython().system('jupyter nbconvert exploratory_data_analysis.ipynb --to markdown --output="backups/exploratory_data_analysis"')
 
 # Also archiving this bad boy
-get_ipython().system('jupyter nbconvert clear_cut_solution-EDA.ipynb --to html --output="backups/clear-cut-solution-EDA"')
+get_ipython().system('jupyter nbconvert exploratory_data_analysis.ipynb --to html --output="backups/exploratory_data_analysis"')
 
