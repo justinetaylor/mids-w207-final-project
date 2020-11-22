@@ -9,8 +9,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 
 
-# Todo: I don't think we need to do this because we scale eveything
-# (feature wise) later.
 def scale_hillside(data):
     """
     This function scales the hillside features between 0 and 1.
@@ -373,7 +371,7 @@ def manipulate_data(data):
 
 
 """
-TODO: Remove all functions below if we don't end up using 
+TODO: All functions below are not currently being used - Remove if we don't end up using them
 """
 
 def combine_environment_features_ct12(data):
