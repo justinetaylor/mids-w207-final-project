@@ -3,6 +3,7 @@ import numpy as np
 
 # Libraries for models
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import AdaBoostClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
@@ -17,7 +18,7 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 plt.style.use('seaborn')
 
-def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predictions_all_data):
+def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predictions_all_data,xgb_predictions_all_data):
     """ 
     This function retrieves the results from three models and chooses new labels based on the frequency a class was chosen 
     
@@ -40,7 +41,7 @@ def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predicti
     # Keep track of instances in which the models disagree for insight
     count = 0
     for i in range(len(forest_predictions_all_data)):
-        labels = [forest_predictions_all_data[i],knn_predictions_all_data[i],mlp_predictions_all_data[i]]
+        labels = [forest_predictions_all_data[i],knn_predictions_all_data[i],mlp_predictions_all_data[i],xgb_predictions_all_data[i]]
         unique, counts = np.unique(labels, return_counts=True)
         zipped = dict(zip(unique, counts))
         # Initialize Classification
@@ -55,7 +56,7 @@ def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predicti
         # All three models disagree. Choose the label from MLP
         else:
             count += 1
-            classification = mlp_predictions_all_data[i]
+            classification = xgb_predictions_all_data[i]
         # Assign the new prediction
         new_predictions.append(classification) 
         
