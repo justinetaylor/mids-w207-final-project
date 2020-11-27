@@ -482,7 +482,6 @@ def drop_unseen_soil_types(data):
             "Soil_Type37",
             "Soil_Type21",
             "Soil_Type27",
-            "Soil_Type36"
             ],
         inplace=True)
     return data

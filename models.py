@@ -18,9 +18,9 @@ from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
 plt.style.use('seaborn')
 
-def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predictions_all_data,xgb_predictions_all_data):
+def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predictions_all_data,xgb_predictions_all_data,ada_predictions_all_data):
     """ 
-    This function retrieves the results from three models and chooses new labels based on the frequency a class was chosen 
+    This function retrieves the results from five models and chooses new labels based on the frequency a class was chosen 
     
     Parameters
     ----------
@@ -41,7 +41,7 @@ def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predicti
     # Keep track of instances in which the models disagree for insight
     count = 0
     for i in range(len(forest_predictions_all_data)):
-        labels = [forest_predictions_all_data[i],knn_predictions_all_data[i],mlp_predictions_all_data[i],xgb_predictions_all_data[i]]
+        labels = [forest_predictions_all_data[i],knn_predictions_all_data[i],mlp_predictions_all_data[i],xgb_predictions_all_data[i],ada_predictions_all_data[i]]
         unique, counts = np.unique(labels, return_counts=True)
         zipped = dict(zip(unique, counts))
         # Initialize Classification
@@ -49,14 +49,15 @@ def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predicti
         # If there's only 1 unique value, all models agreed
         if len(unique) == 1:
             classification = unique[0]
-        # Two out of three models agreed
-        elif len(unique) == 2:
-            count += 1
-            classification = unique[np.argmax(counts)]
-        # All three models disagree. Choose the label from MLP
-        else:
+       # All five models disagree. Choose the label from xgboost
+        elif len(unique) == 5:
             count += 1
             classification = xgb_predictions_all_data[i]
+         # Two or more out of five models agreed
+        else:
+            count += 1
+            classification = unique[np.argmax(counts)]
+            
         # Assign the new prediction
         new_predictions.append(classification) 
         
