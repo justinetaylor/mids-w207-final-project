@@ -18,7 +18,7 @@ Test results for each model are in the "submissions" folder
   
 ## Computing Environment
   
-Work was conducted in the `jupyter/tensorflow-notebook` docker container as put together by the jupyter development team.
+Work was conducted in the `kmartcontainers/207final:latest` container, which is based on the `jupyter/tensorflow-notebook` docker container as put together by the jupyter development team. It adds the `xgboost` library. 
 
 ### Working on local machine
 
@@ -40,7 +40,7 @@ docker pull jupyter/tensorflow-notebook
 * `-p` forwards the container's port 8889 to our machine's port 8889
 
 ``` shell
-docker run -d --rm -v ~/w207/mids-w207-final-project:/home/jovyan/work --name vorpal -p 8889:8889 jupyter/tensorflow-notebook
+docker run -d --rm -v ~/w207/mids-w207-final-project:/home/jovyan/work --name vorpal -p 8889:8889 kmartcontainers/207final:latest
 ```
 
 ***Step 2b (Optional):*** Verify that we have mounted correctly. 
