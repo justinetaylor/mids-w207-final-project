@@ -9,8 +9,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 
 
-# Todo: I don't think we need to do this because we scale eveything
-# (feature wise) later.
 def scale_hillside(data):
     """
     This function scales the hillside features between 0 and 1.
@@ -31,107 +29,6 @@ def scale_hillside(data):
 
     return data
 
-
-def preprocess_soil_type(s):
-    """
-    This function drops the Soil Type features that are not present in the training dataset.
-
-    Parameters
-    ----------
-        s: string
-            Full soil names and descriptions
-    Returns
-    -------
-        s: string
-            Regex manipulated string
-    """
-    # Lowercase everything to make it easier to work with.
-    s = s.lower()
-
-    # Take out punctuation and numbers.
-    pattern = re.compile(r"[\d\.,-]")
-    s = pattern.sub(" ", s)
-
-    # Take out filler words "family","families","complex".
-    pattern = re.compile(r"(family|families|complex|typic)")
-    s = pattern.sub(" ", s)
-
-    # Replace cryaquolis/aquolis (doesn't exist) with cryaquolls/aquolls.
-    pattern = re.compile(r"aquolis")
-    s = pattern.sub("aquolls", s)
-
-    # The "unspecified" row doesn't contain any data.
-    pattern = re.compile(r"unspecified in the usfs soil and elu survey")
-    s = pattern.sub(" ", s)
-
-    # Replace the space in words separated by a single space with an
-    # underscore.
-    pattern = re.compile(r"(\w+) (\w+)")
-    s = pattern.sub(r"\1_\2", s)
-
-    return s
-
-
-def set_soil_type_by_attributes(data):
-    """
-    This function parses the soil type descriptions to create new features.
-    This will account for the overlap in soil types.
-    Parameters
-    ----------
-    data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-    Returns
-    -------
-    data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-    """
-    # Pull in the text of the soil types
-    with open("km_EDA/soil_raw.txt") as f:
-        s_raw = f.read()
-
-    s = preprocess_soil_type(s_raw)
-    
-    ### COUNT AND TRANSFORM THE DATA ###
-    cv = CountVectorizer()
-    # Create the counts matrix based on word occurences in our processed soil
-    # types
-    counts = cv.fit_transform(s.split("\n"))
-    # We can use the counts as a transformation matrix to convert to our
-    # refined categories
-    xform = counts.toarray()
-
-    # Explanation of xform
-    # It turns out that multiplying our original soil matrix by xform using matrix mutiplication
-    # will just give us a matrix that has been converted to the new feature
-    # space.
-
-    # Grab out the new features (that are replacing s_01 thru s_40)
-    new_cats = cv.get_feature_names()
-
-    # Get original soil names
-    og_soil_col_names = [("Soil_Type{:d}".format(ii + 1)) for ii in range(40)]
-
-    # Get columns containing soil information from our dataframe.
-    soil_cols = np.array(data[og_soil_col_names])
-
-    # Transform the soil features. Put them into a dataframe.
-    trans_soil = np.matmul(soil_cols, xform)
-    trans_soil_df = pd.DataFrame(data=trans_soil, columns=new_cats)
-
-    # Remove the features that have very low occurence rates
-
-    # Remove low occurence soil types
-    occ_lim = 1400  # 0, 2,100,300,900,1400 default # remove columns that have less than occ_lim examples in the data
-    high_occ_ser = trans_soil_df.sum(axis=0) >= occ_lim
-    high_occ_names = [
-        entry for entry in high_occ_ser.index if high_occ_ser[entry]]
-    trans_soil_df = trans_soil_df[high_occ_names]
-
-    # Combine the new soil features with the existing freatures in a single df
-    data = data.drop(columns=og_soil_col_names)
-    data = pd.concat([data, trans_soil_df], axis=1)
-    
-    return data
 
 
 def transform_aspect(data):
@@ -351,9 +248,8 @@ def manipulate_data(data):
     
     data = scale_hillside(data)
     
-#     TODO: Something in this function is making Nans in various features (elevation, slope, etc.)
-#     # Soil Combination Two (based on descriptions)
-#     data = fe.set_soil_type_by_attributes(data)
+    data = drop_unseen_soil_types(data)  
+    data = combine_soil_types(data)
     
     data = transform_aspect(data)
     
@@ -371,10 +267,34 @@ def manipulate_data(data):
     return data
 
 
+def drop_unseen_soil_types(data):
+    """
+    This function drops soils that are either not seen in the dataset at all or are very rare.
 
-"""
-TODO: Remove all functions below if we don't end up using 
-"""
+    Parameters
+    ----------
+    data: pd.DataFrame
+        The training data of shape (Training Examples, Features)
+
+    Returns
+    -------
+    data: pd.DataFrame
+        The training data of shape (Training Examples, Features)
+    """
+    # Remove soil type 7 and 15 due to no data
+    data.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
+    # Remove soil type 19, 37, 21, 27,36 due to low frequency in training data -
+    # TODO: should we be dropping these?
+    data.drop(
+        columns=[
+            "Soil_Type19",
+            "Soil_Type37",
+            "Soil_Type21",
+            "Soil_Type27",
+            ],
+        inplace=True)
+    return data
+
 
 def combine_environment_features_ct12(data):
     """
@@ -460,31 +380,111 @@ def combine_soil_types(data):
     return data
 
 
-def drop_unseen_soil_types(data):
-    """
-    This function drops soils that are either not seen in the dataset at all or are very rare.
 
+
+
+"""
+The functions below are no longer used, but contributed to the research and exploration in the project
+"""
+
+
+def preprocess_soil_type(s):
+    """
+    This function drops the Soil Type features that are not present in the training dataset.
+
+    Parameters
+    ----------
+        s: string
+            Full soil names and descriptions
+    Returns
+    -------
+        s: string
+            Regex manipulated string
+    """
+    # Lowercase everything to make it easier to work with.
+    s = s.lower()
+
+    # Take out punctuation and numbers.
+    pattern = re.compile(r"[\d\.,-]")
+    s = pattern.sub(" ", s)
+
+    # Take out filler words "family","families","complex".
+    pattern = re.compile(r"(family|families|complex|typic)")
+    s = pattern.sub(" ", s)
+
+    # Replace cryaquolis/aquolis (doesn't exist) with cryaquolls/aquolls.
+    pattern = re.compile(r"aquolis")
+    s = pattern.sub("aquolls", s)
+
+    # The "unspecified" row doesn't contain any data.
+    pattern = re.compile(r"unspecified in the usfs soil and elu survey")
+    s = pattern.sub(" ", s)
+
+    # Replace the space in words separated by a single space with an
+    # underscore.
+    pattern = re.compile(r"(\w+) (\w+)")
+    s = pattern.sub(r"\1_\2", s)
+
+    return s
+
+
+def set_soil_type_by_attributes(data):
+    """
+    This function parses the soil type descriptions to create new features.
+    This will account for the overlap in soil types.
     Parameters
     ----------
     data: pd.DataFrame
         The training data of shape (Training Examples, Features)
-
     Returns
     -------
     data: pd.DataFrame
         The training data of shape (Training Examples, Features)
     """
-    # Remove soil type 7 and 15 due to no data
-    data.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
-    # Remove soil type 19, 37, 21, 27,36 due to low frequency in training data -
-    # TODO: should we be dropping these?
-    data.drop(
-        columns=[
-            "Soil_Type19",
-            "Soil_Type37",
-            "Soil_Type21",
-            "Soil_Type27",
-            "Soil_Type36"
-            ],
-        inplace=True)
+    # Pull in the text of the soil types
+    with open("km_EDA/soil_raw.txt") as f:
+        s_raw = f.read()
+
+    s = preprocess_soil_type(s_raw)
+    
+    ### COUNT AND TRANSFORM THE DATA ###
+    cv = CountVectorizer()
+    # Create the counts matrix based on word occurences in our processed soil
+    # types
+    counts = cv.fit_transform(s.split("\n"))
+    # We can use the counts as a transformation matrix to convert to our
+    # refined categories
+    xform = counts.toarray()
+
+    # Explanation of xform
+    # It turns out that multiplying our original soil matrix by xform using matrix mutiplication
+    # will just give us a matrix that has been converted to the new feature
+    # space.
+
+    # Grab out the new features (that are replacing s_01 thru s_40)
+    new_cats = cv.get_feature_names()
+
+    # Get original soil names
+    og_soil_col_names = [("Soil_Type{:d}".format(ii + 1)) for ii in range(40)]
+
+    # Get columns containing soil information from our dataframe.
+    soil_cols = np.array(data[og_soil_col_names])
+
+    # Transform the soil features. Put them into a dataframe.
+    trans_soil = np.matmul(soil_cols, xform)
+    trans_soil_df = pd.DataFrame(data=trans_soil, columns=new_cats)
+
+    # Remove the features that have very low occurence rates
+
+    # Remove low occurence soil types
+    occ_lim = 1400  # 0, 2,100,300,900,1400 default # remove columns that have less than occ_lim examples in the data
+    high_occ_ser = trans_soil_df.sum(axis=0) >= occ_lim
+    high_occ_names = [
+        entry for entry in high_occ_ser.index if high_occ_ser[entry]]
+    trans_soil_df = trans_soil_df[high_occ_names]
+
+    # Combine the new soil features with the existing freatures in a single df
+    data = data.drop(columns=og_soil_col_names)
+    data = pd.concat([data, trans_soil_df], axis=1)
+    
     return data

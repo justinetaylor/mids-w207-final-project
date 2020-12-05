@@ -21,7 +21,11 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 plt.style.use('seaborn')
 
-def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predictions_all_data,xgb_predictions_all_data,ada_predictions_all_data):
+def ensemble(forest_predictions_all_data, 
+             knn_predictions_all_data, 
+             mlp_predictions_all_data,
+             xgb_predictions_all_data,
+             ada_predictions_all_data):
     """ 
     This function retrieves the results from five models and chooses new labels based on the frequency a class was chosen 
     
@@ -44,7 +48,13 @@ def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predicti
     # Keep track of instances in which the models disagree for insight
     count = 0
     for i in range(len(forest_predictions_all_data)):
-        labels = [forest_predictions_all_data[i],knn_predictions_all_data[i],mlp_predictions_all_data[i],xgb_predictions_all_data[i],ada_predictions_all_data[i]]
+        labels = [
+            forest_predictions_all_data[i],
+            knn_predictions_all_data[i],
+            mlp_predictions_all_data[i],
+            xgb_predictions_all_data[i],
+            ada_predictions_all_data[i]
+        ]
         unique, counts = np.unique(labels, return_counts=True)
         zipped = dict(zip(unique, counts))
         # Initialize Classification
@@ -69,6 +79,9 @@ def ensemble(forest_predictions_all_data, knn_predictions_all_data, mlp_predicti
     return np.array(new_predictions).astype(int)
 
 
+"""
+We did not include these functions in the final notebook, but they were vital in our exploration and research for this project 
+"""
 
 def pca(train_data,train_labels, dev_data, dev_labels):
     """ 
@@ -122,9 +135,9 @@ def pca(train_data,train_labels, dev_data, dev_labels):
     return new_data, new_dev_data, pca
     
     
-    
 def neural_network_tf(train_data, train_labels, num_features, num_output, num_epochs):
     """ 
+    Source: https://www.tensorflow.org/tutorials/quickstart/beginner
     This function trains a neural network using tensorflow 
     Parameters
     ----------
@@ -140,6 +153,13 @@ def neural_network_tf(train_data, train_labels, num_features, num_output, num_ep
     -------
     model:
         Fitted neural network that can be used for evaluation and testing 
+        
+    Example:
+    neuralnet_tf_original = models.neural_network_tf(train_data_original, 
+                                                 train_labels_original-1, 
+                                                 num_features=48, 
+                                                 num_output=7,
+                                                 num_epochs=100) 
     """
     # Construct a model with 4 layers, relu activation, drop-out and batch normalization 
     model = tf.keras.models.Sequential([
@@ -179,44 +199,6 @@ def neural_network_tf(train_data, train_labels, num_features, num_output, num_ep
     return model
 
     
-"""
-TODO: Remove all functions below if we don't end up using 
-"""
-
-def neural_network(train_data, train_labels, dev_data, dev_labels):
-    """ 
-    This function creates and fits a Neural Network and evaluates the model on the dev set. 
-    
-    Parameters
-    ----------
-    train_data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-    train_labels: pd.DataFrame
-        The training labels of shape (Training Examples, 1)
-    dev_data: pd.DataFrame
-            The dev labels of shape (Dev Examples, Features)
-    dev_labels: pd.DataFrame
-            The dev labels of shape (Dev Examples, 1)
-    """
-    model = tf.keras.models.Sequential([
-        tf.keras.layers.Flatten(input_shape=(54,)),
-        tf.keras.layers.Dense(128, activation='relu'),
-        tf.keras.layers.Dropout(0.2),
-        tf.keras.layers.Dense(10)
-    ])
-
-    # Retrieve predictions
-    predictions = model(train_data[:-1].to_numpy())
-    # Convert logits to probabilities
-    tf.nn.softmax(predictions).numpy()
-    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-    model.compile(optimizer='adam',
-                  loss=loss_fn,
-                  metrics=['accuracy'])
-    model.fit(train_data.to_numpy(), train_labels.to_numpy(), epochs=5)
-    model.evaluate(dev_data.to_numpy(), dev_labels.to_numpy(), verbose=2)
-
-    
 def logistic_regression(train_data, train_labels, dev_data, dev_labels):
     """
     This function creates and fits a Logistic Regression model and evaluates the model on the dev set. 
@@ -240,135 +222,3 @@ def logistic_regression(train_data, train_labels, dev_data, dev_labels):
     model.fit(train_data, train_labels)
     score = model.score(dev_data, dev_labels)
     print("Logistic Regression accuracy = ", score)
-
-def multi_layer_perceptron(train_data, train_labels, dev_data, dev_labels):
-    """ 
-    This function creates and fits a Multi-Layer Perceptron Classifier and evaluates the model on the dev set. 
-    
-    Parameters
-    ----------
-    train_data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-    train_labels: pd.DataFrame
-        The training labels of shape (Training Examples, 1)
-    dev_data: pd.DataFrame
-            The dev labels of shape (Dev Examples, Features)
-    dev_labels: pd.DataFrame
-            The dev labels of shape (Dev Examples, 1)
-            
-    Returns
-    -------
-    score: float
-        Mean Accuracy of the model
-    probailities: list of type float
-        Probabilities assigned to each class 
-    model: Multi-Layer Perceptron Classifier
-        Fitted KNeighbors Classifier that can be used for testing 
-    """
-    # Default activation is 'relu', random state lets us get the same result every time (so we can tune other parameters)
-    # max_iter is 200 by default, but more helps. alpha is the regularization
-    # parameter. solver is 'adam' by default
-    model = MLPClassifier(
-        alpha=1e-3,
-        hidden_layer_sizes=(
-            200,
-        ),
-        random_state=0,
-        max_iter=200)
-    model.fit(train_data, train_labels)
-    predictions = model.predict(dev_data)
-    score = model.score(dev_data, dev_labels)
-    probabilities = model.predict_proba(dev_data)
-    plot_confusion_matrix(model, dev_data, dev_labels, values_format="d")
-    plt.title("MLP Confusion Matrix")
-    plt.plot()
-    print("MLP accuracy = ", score)
-    mse_nn = mean_squared_error(dev_labels, predictions)
-    print("Mean Squared Error: ", mse_nn)
-
-    return score, probabilities, model
-
-
-def random_forest(num_trees, train_data, train_labels, dev_data, dev_labels):
-    """
-    This function creates and fits a Random Forest model and evaluates the model on the dev set.
-
-    Parameters
-    ----------
-    num_trees: int
-        Number of trees to create in the forest
-    train_data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-    train_labels: pd.DataFrame
-        The training labels of shape (Training Examples, 1)
-    dev_data: pd.DataFrame
-            The dev labels of shape (Dev Examples, Features)
-    dev_labels: pd.DataFrame
-            The dev labels of shape (Dev Examples, 1)
-
-    Returns
-    -------
-    score: float
-        Mean Accuracy of the model
-    probailities: list of type float
-        Probabilities assigned to each class
-    model: RandomForestClassifier
-        Fitted Random Forest Classifier that can be used for testing
-    """
-    model = RandomForestClassifier(num_trees, max_depth=8)
-    model.fit(train_data, train_labels)
-    predictions = model.predict(dev_data)
-    score = model.score(dev_data, dev_labels)
-    probabilities = model.predict_proba(dev_data)
-    print(
-        "Random Forest Performance for {0} trees: {1}".format(
-            num_trees,
-            score))
-    # Plot_confusion_matrix
-    plot_confusion_matrix(model, dev_data, dev_labels, values_format="d")
-    plt.title("{} Tree Random Forest Confusion Matrix:".format(num_trees))
-    plt.plot()
-    mse_forest = mean_squared_error(dev_labels, predictions)
-    print("Mean Squared Error: ", mse_forest)
-    return score, probabilities, model
-
-
-def k_nearest_neighbors(kn, train_data, train_labels, dev_data, dev_labels):
-    """
-    This function creates and fits a K-Nearest Neighbors model and evaluates the model on the dev set.
-
-    Parameters
-    ----------
-    kn: int
-        Number of neighbors
-    train_data: pd.DataFrame
-        The training data of shape (Training Examples, Features)
-    train_labels: pd.DataFrame
-        The training labels of shape (Training Examples, 1)
-    dev_data: pd.DataFrame
-            The dev labels of shape (Dev Examples, Features)
-    dev_labels: pd.DataFrame
-            The dev labels of shape (Dev Examples, 1)
-
-    Returns
-    -------
-    score: float
-        Mean Accuracy of the model
-    probailities: list of type float
-        Probabilities assigned to each class
-    model: KNeighbors Classifier
-        Fitted KNeighbors Classifier that can be used for testing
-    """
-    model = KNeighborsClassifier(n_neighbors=kn)
-    model.fit(train_data, train_labels)
-    predictions = model.predict(dev_data)
-    score = model.score(dev_data, dev_labels)
-    print("KNN {0} neighbors : accuracy = {1}".format(kn, score))
-    probabilities = model.predict_proba(dev_data)
-    # Plot Confusion Matrix
-    plot_confusion_matrix(model, dev_data, dev_labels, values_format="d")
-    plt.title("KNN Confusion Matrix with {} Neighbors".format(kn))
-    plt.plot()
-    mse_knn = mean_squared_error(dev_labels, predictions)
-    print("Mean Squared Error: ", mse_knn)
-    return score, probabilities, model
