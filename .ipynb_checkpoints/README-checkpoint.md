@@ -7,8 +7,8 @@
 ## Four primary files:
 
 1. **exploratory_data_analysis.ipynb**: Jupyter notebook with a detailed analysis of the training data
-2. **feature_engineering.py**:  Python script containing all transformations 
-3. **models.py**: Python script containing all models and configurations 
+2. **feature_engineering.py**:  Python library containing all transformations 
+3. **models.py**: Python library containing all models and configurations 
 4. **clear_cut_solution.ipynb**:  Jupyter notebook with descriptions, solutions and test results
 
 
