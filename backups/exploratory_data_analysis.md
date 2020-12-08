@@ -1,6 +1,5 @@
-<a href="https://colab.research.google.com/github/justinetaylor/mids-w207-final-project/blob/yang_branch/clear_cut_solution.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+# EDA for Forest Cover Type Prediction
 
-# Forest Cover Type Prediction
 #### Team: Clear-Cut Solution: Kevin Martin, Yang Jing, Justine Schabel
 
 ## Initial Setup
@@ -22,18 +21,6 @@ import os
 import re
 import warnings
 warnings.simplefilter("ignore")
-```
-
-
-```python
-# Mount the drive for file storage
-# from google.colab import drive
-# drive.mount('/content/drive')
-```
-
-
-```python
-# os.chdir('/content/drive/My Drive/W207-Final-Project')
 ```
 
 ### Load Data
@@ -392,7 +379,7 @@ plt.show()
 
 
     
-![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_14_1.png)
+![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_11_1.png)
     
 
 
@@ -438,7 +425,7 @@ rows = col_count//2
 fig, axes = plt.subplots(rows,2,figsize=(20,20))
 for i in range(col_count):
     for j in range(2):
-        # TODO: Can you explain the index manipulaions with a comment? 
+        # plot in alternating columns 
         col= train_df[num_cols[j+2*(i//2)]]
         sns.histplot(col, ax=axes[i//2][j])
         axes[i//2][j].grid()
@@ -446,7 +433,7 @@ for i in range(col_count):
 
 
     
-![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_21_0.png)
+![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_18_0.png)
     
 
 
@@ -465,7 +452,7 @@ for i in range(col_count):
 
 
     
-![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_23_0.png)
+![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_20_0.png)
     
 
 
@@ -535,7 +522,7 @@ plt.show()
 
 
     
-![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_28_0.png)
+![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_25_0.png)
     
 
 
@@ -557,7 +544,8 @@ cat_cols = ['Soil_Type1', 'Soil_Type2', 'Soil_Type3',
        'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
        'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
        'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36',
-       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40','Wilderness_Area1', 'Wilderness_Area2', 'Wilderness_Area3',
+       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40',
+       'Wilderness_Area1', 'Wilderness_Area2', 'Wilderness_Area3',
        'Wilderness_Area4']
 
 soil_cols = cat_cols.copy()
@@ -1055,7 +1043,8 @@ As we can see in the pivot table above, there are similar combinations of soil t
 st_list = ['Soil_Type1', 'Soil_Type2', 'Soil_Type3',
        'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type8',
        'Soil_Type9', 'Soil_Type10', 'Soil_Type11', 'Soil_Type12',
-       'Soil_Type13', 'Soil_Type14', 'Soil_Type16','Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
+       'Soil_Type13', 'Soil_Type14', 'Soil_Type16','Soil_Type17', 
+       'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
        'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24',
        'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
        'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
@@ -1071,11 +1060,11 @@ plt.show()
 
 
     
-![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_35_0.png)
+![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_32_0.png)
     
 
 
-Here we can examine the relationship between soil type and cover type for each soil type. # TODO: Discuss more
+Here we can examine the relationship between soil type and cover type for each soil type. We see that there are a number of soil types that have nearly identical distributions  of cover types.
 
 #### Wilderness Types
 
@@ -1094,7 +1083,7 @@ plt.show()
 
 
     
-![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_39_0.png)
+![png](backups/exploratory_data_analysis_files/backups/exploratory_data_analysis_36_0.png)
     
 
 
@@ -1128,10 +1117,8 @@ plt.show()
 !jupyter nbconvert exploratory_data_analysis.ipynb --to html --output="backups/exploratory_data_analysis"
 ```
 
-    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
     [NbConvertApp] Converting notebook exploratory_data_analysis.ipynb to python
-    [NbConvertApp] Writing 9803 bytes to backups/exploratory_data_analysis.py
-    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+    [NbConvertApp] Writing 9472 bytes to backups/exploratory_data_analysis.py
     [NbConvertApp] Converting notebook exploratory_data_analysis.ipynb to markdown
     [NbConvertApp] Support files will be in backups/exploratory_data_analysis_files/
     [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
@@ -1140,8 +1127,12 @@ plt.show()
     [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
     [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
     [NbConvertApp] Making directory backups/exploratory_data_analysis_files/backups
-    [NbConvertApp] Writing 29724 bytes to backups/exploratory_data_analysis.md
-    [NbConvertApp] WARNING | Config option `kernel_spec_manager_class` not recognized by `NbConvertApp`.
+    [NbConvertApp] Writing 29488 bytes to backups/exploratory_data_analysis.md
     [NbConvertApp] Converting notebook exploratory_data_analysis.ipynb to html
-    [NbConvertApp] Writing 2414368 bytes to backups/exploratory_data_analysis.html
+    [NbConvertApp] Writing 2727567 bytes to backups/exploratory_data_analysis.html
 
+
+
+```python
+
+```

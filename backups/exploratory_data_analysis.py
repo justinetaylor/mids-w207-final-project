@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# <a href="https://colab.research.google.com/github/justinetaylor/mids-w207-final-project/blob/yang_branch/clear_cut_solution.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-
-# # Forest Cover Type Prediction
+# # EDA for Forest Cover Type Prediction
+# 
 # #### Team: Clear-Cut Solution: Kevin Martin, Yang Jing, Justine Schabel
 
 # ## Initial Setup
@@ -28,23 +27,9 @@ import warnings
 warnings.simplefilter("ignore")
 
 
-# In[2]:
-
-
-# Mount the drive for file storage
-# from google.colab import drive
-# drive.mount('/content/drive')
-
-
-# In[3]:
-
-
-# os.chdir('/content/drive/My Drive/W207-Final-Project')
-
-
 # ### Load Data
 
-# In[4]:
+# In[2]:
 
 
 # Read in training data 
@@ -58,7 +43,7 @@ test_df = pd.read_csv("data/test.csv")
 
 # First, we check the data attributes, quality and shape.
 
-# In[5]:
+# In[3]:
 
 
 # Examine shape 
@@ -68,7 +53,7 @@ print(train_df.shape)
 train_df.describe()
 
 
-# In[6]:
+# In[4]:
 
 
 # Check data types
@@ -77,7 +62,7 @@ train_df.dtypes
 
 # #### Verify Dataset Is Balanced
 
-# In[7]:
+# In[5]:
 
 
 # Visualize the distribution of labels, "Cover_Type"
@@ -90,7 +75,7 @@ plt.show()
 
 # #### Check For Null Values
 
-# In[8]:
+# In[6]:
 
 
 # Check for NA values
@@ -105,7 +90,7 @@ print("There are {} values in the test data".format(test_df.count()[0]))
 
 # #### Distributions of Numeric Columns
 
-# In[9]:
+# In[7]:
 
 
 # Collect numeric feature column names - so we can easily access these columns when modifying them 
@@ -115,7 +100,7 @@ num_cols = ['Elevation', 'Slope','Aspect',
        'Hillshade_3pm', 'Horizontal_Distance_To_Fire_Points']
 
 
-# In[10]:
+# In[8]:
 
 
 # Visualize the distribution of numerical columns
@@ -124,7 +109,7 @@ rows = col_count//2
 fig, axes = plt.subplots(rows,2,figsize=(20,20))
 for i in range(col_count):
     for j in range(2):
-        # TODO: Can you explain the index manipulaions with a comment? 
+        # plot in alternating columns 
         col= train_df[num_cols[j+2*(i//2)]]
         sns.histplot(col, ax=axes[i//2][j])
         axes[i//2][j].grid()
@@ -132,7 +117,7 @@ for i in range(col_count):
 
 # Here we can see the distribution are skewed for a few variables, espcially in the "distance" related ones, such as "Horizontal_Diestance_To_Fire_points". A log-transformation may improve the model performance. Also, there are zeros in these variables, we need to add 1 before performing the log transofrmation.
 
-# In[11]:
+# In[9]:
 
 
 # Visualize the distribution of numerical columns with Cover Type
@@ -151,7 +136,7 @@ for i in range(col_count):
 
 # #### Correlation
 
-# In[12]:
+# In[10]:
 
 
 # Rank correlations with "cover type"
@@ -160,7 +145,7 @@ train_corr1=train_df.corr()
 train_corr1['Cover_Type'].abs().sort_values(ascending=False)[:31]
 
 
-# In[13]:
+# In[11]:
 
 
 # Explore correlations between numerical features
@@ -178,7 +163,7 @@ plt.show()
 
 # Now, we'll isolate and explore the distribution of soil types. 
 
-# In[14]:
+# In[12]:
 
 
 # Get a list of categorical column names
@@ -191,7 +176,8 @@ cat_cols = ['Soil_Type1', 'Soil_Type2', 'Soil_Type3',
        'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
        'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
        'Soil_Type33', 'Soil_Type34', 'Soil_Type35', 'Soil_Type36',
-       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40','Wilderness_Area1', 'Wilderness_Area2', 'Wilderness_Area3',
+       'Soil_Type37', 'Soil_Type38', 'Soil_Type39', 'Soil_Type40',
+       'Wilderness_Area1', 'Wilderness_Area2', 'Wilderness_Area3',
        'Wilderness_Area4']
 
 soil_cols = cat_cols.copy()
@@ -205,7 +191,7 @@ mask1 = soil_df_unpivoted["yes"] == 1
 soil_df_unpivoted = soil_df_unpivoted[mask1]
 
 
-# In[15]:
+# In[13]:
 
 
 # Visualize cover type VS soil type in a pivot table. 
@@ -216,14 +202,15 @@ df1
 
 # As we can see in the pivot table above, there are similar combinations of soil types for different "cover type". We'll combine the soil types that share same "cover types" to reduce dimensionality. Further, "cover type 1" and "cover type 2" , "cover type 3" and "cover type 6" share many overlapping features. To magnify the signal, we'll combine features as an extra feature where there is a difference between the 2 pairs of cover types.
 
-# In[24]:
+# In[14]:
 
 
 # Visualize the distribution of soil type and "cover type"
 st_list = ['Soil_Type1', 'Soil_Type2', 'Soil_Type3',
        'Soil_Type4', 'Soil_Type5', 'Soil_Type6', 'Soil_Type8',
        'Soil_Type9', 'Soil_Type10', 'Soil_Type11', 'Soil_Type12',
-       'Soil_Type13', 'Soil_Type14', 'Soil_Type16','Soil_Type17', 'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
+       'Soil_Type13', 'Soil_Type14', 'Soil_Type16','Soil_Type17', 
+       'Soil_Type18', 'Soil_Type19', 'Soil_Type20',
        'Soil_Type21', 'Soil_Type22', 'Soil_Type23', 'Soil_Type24',
        'Soil_Type25', 'Soil_Type26', 'Soil_Type27', 'Soil_Type28',
        'Soil_Type29', 'Soil_Type30', 'Soil_Type31', 'Soil_Type32',
@@ -236,13 +223,13 @@ for i in range(len(st_list)):
 plt.show()
 
 
-# Here we can examine the relationship between soil type and cover type for each soil type. # TODO: Discuss more
+# Here we can examine the relationship between soil type and cover type for each soil type. We see that there are a number of soil types that have nearly identical distributions  of cover types.
 
 # #### Wilderness Types
 
 # Now, we'll isolate and explore the distribution of wilderness types. 
 
-# In[17]:
+# In[15]:
 
 
 wilderness_list =['Wilderness_Area1','Wilderness_Area2','Wilderness_Area3','Wilderness_Area4']
@@ -274,7 +261,7 @@ plt.show()
 # 
 # *because sometimes you just want to look at the markdown or whatever real quick*
 
-# In[18]:
+# In[17]:
 
 
 #Create a backup of the jupyter notebook in a format for where changes are easier to see.
@@ -283,4 +270,10 @@ get_ipython().system('jupyter nbconvert exploratory_data_analysis.ipynb --to mar
 
 # Also archiving this bad boy
 get_ipython().system('jupyter nbconvert exploratory_data_analysis.ipynb --to html --output="backups/exploratory_data_analysis"')
+
+
+# In[ ]:
+
+
+
 

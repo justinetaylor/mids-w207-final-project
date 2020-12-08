@@ -1,12 +1,29 @@
 # Forest Cover Type Prediction
+
 #### Team: Clear-Cut Solution: Kevin Martin, Yang Jing, Justine Schabel
+
+This notebook documents the model development, evaluation and final testing process. 
+
+In each section, we included a flowchart to summarize the feature engineering applied and modeling processes. 
+
+We experimented with different algorithms, including:
+* KNN 
+* Random Forest 
+* Logistic Regression
+* Adaboost
+* Gradient Boosting(XGBoost)
+* Neural Networks(MLP/tensorflow). 
+
+To make the computing environment portable and enable collaboration among team members, we created a docker container `kmartcontainers/207final` which based on the image `jupyter/tensorflow-notebook` that is put out by the  Jupyter development team. Details about the container are documented in the `README.md` file. 
 
 ## Introduction
 
-This project was from a Kaggle competion closed in 2014. 
-[Link to Data page on Kaggle](https://www.kaggle.com/c/forest-cover-type-prediction/data)
+### Data Background
 
-The objective is to classify trees from four wilderness areas located in the Roosevelt National Forest of northern Colorado. Each observation is a 30m x 30m patch. The "labels" are 7 "cover types". They are: 
+This project was from a Kaggle competition closed in 2014. 
+[Data Source](https://www.kaggle.com/c/forest-cover-type-prediction/data)
+
+The objective is to classify trees from four wilderness areas located in the Roosevelt National Forest of northern Colorado. Each observation is a 30m x 30m patch. The "labels" are seven "cover types". They are: 
 
 1. Spruce/Fir
 2. Lodgepole Pine
@@ -16,18 +33,23 @@ The objective is to classify trees from four wilderness areas located in the Roo
 6. Douglas-fir
 7. Krummholz
 
-The training set (15120 observations) contains both features and the labels. The test set contains only the features. Compared to the training set, the test set is very large with 565892 observations. 
+The training set (15120 observations) contains both features and labels. The test set contains only the features. Compared to the training set, the test set is very large with 565892 observations. 
 
-There are 54 features, include 40 soil types (binary), 4 wilderness ares (binary), and 10 numerical features, such as Elevation, slope, aspects and distances to certain points.
+There are 54 features, including 40 soil types (binary indicators for soil features), 4 wilderness areas (binary), and 10 numerical features, such as elevation, slope, aspects and distances to certain points.
 
-We quickly noticed that the training data size is less than 3% of the testign data. We might not have enough diversites in the training data to predict the labels for testign data. We also noticed that 100% accuracy was achieved in this Kaggle competion previously, but that appeared to due to a "cheat" already known to the Kaggle team. As such, our objective is not to obsess over the accuracy of the "testing data", but to explore which classficiation algorithm and/or process works best for the dataset. In addition, some "cover types" appear to be easy to confuse, such as "spruce/fir" and "lodgpole pine". We confirmed this suspicsion by performing exploratory data analysis first. Our EDA is documented in the "explanatory_data_analysis" notebook. To imporve model performance, we need to find a way to bettr differentiate between type 1 and 2. 
+### Confusing Cover Types and Tuned Sub-Models
 
-Due to the perceived higher confusion rate between type 1 ad type 2 trees from the EDA, and between type 3 and 6 trees, we performed a separate training on these 2 subsets. We also performed other feature engineering steps, which include scaling numerical features, power-transfomration of "elevation" and dropping some less frequent soil types or "distance" related features. In addition, dFor better organizaiton of the code, we saved all the feature engineering functions under a separate module, called "feature_engineering.py".
+Our EDA and initial modeling revealed that some "cover types" appear to be easy to confuse, such as "spruce/fir" and "lodgepole pine". We confirmed this suspicion by performing exploratory data analysis first. Our EDA is documented in the "explanatory_data_analysis" notebook. To improve model performance, we need to find a way to better differentiate between type 1 and 2. 
 
-In addition, to make the computing environment portable and enable collaboration among team members, we created a docker container based on the image "jupyter/tensorflow-notebook". Details about the container is documented in the "readme.md" file. 
+Due to the higher confusion rate between type 1 and type 2 trees and between type 3 and 6 trees, we performed a separate training on these 2 subsets. We also performed other feature engineering steps, which include scaling numerical features, power-transformation of "elevation" and dropping some less frequent soil types or "distance" related features. In addition, dFor better organization of the code, we saved all the feature engineering functions under a separate module, called "feature_engineering.py".
 
-This noteboook documents the model development, evluation and final testing process. In each section, we included a flowchart to summarize the feature engineering applied and modeling processes. We experimented with different algorithms, including KNN, Random Forest, Logistic Regression, Adaboost, Gradient Boosting(XGBoost), and neural networks(MLP). Without separate training, the accuracy for "dev data" from both MLP and XGBoost was already in 84%-86% range. With separately trained sub-models, the accuracy for "dev data" from both MLP and XGBoost models was above 90%. However, when applied to the "testing data", the accuracy dropped to 74%. We suspect that it's mainly due to the small training data size,and the model is overfitting. To include more observations in the training data, we used 90/10 split instead of 80/20. And, to counter the impact of overfitting, we used "max_depth=1" in training the Random Forest model. While this decreased the Randome Forest model accuracy for the dev data to 40%, it works well in our manual ensemble to serve as a disserting vote. Our final model is based on a manual ensemble where we take the majority vote of the predictions from the top 5 performing algorithms (KNN, Random Forest, Adaboost, XGBoost and MLP) for this use case. Where there is a tie, we took the prediction from the XGboost model. This manual ensemble model is documented in the "model.py" file.  In the end, we achieved over 94% accuracy on the dev data and over 76% accuracy on the testing data. 
+Without separate training, the accuracy for "dev data'' from both MLP and XGBoost was already in 84%-86% range. With separately trained sub-models, the accuracy for "dev data'' from both MLP and XGBoost models was above 90%. However, when applied to the "testing data'', the accuracy dropped to 74%. We suspect that it's mainly due to the small training data size,and the model is overfitting. To include more observations in the training data, we used 90/10 split instead of 80/20. And, to counter the impact of overfitting, we used "max_depth=1" in training the Random Forest model. While this decreased the Random Forest model accuracy for the dev data to 40%, it works well in our manual ensemble to serve as a dissenting vote. Our final model is based on a manual ensemble where we take the majority vote of the predictions from the top 5 performing algorithms (KNN, Random Forest, Adaboost, XGBoost and MLP) for this use case. Where there is a tie, we took the prediction from the XGboost model. This manual ensemble model is documented in the "model.py" file.  In the end, we achieved over 94% accuracy on the dev data and over 76% accuracy on the testing data. 
 
+### Training vs Test Data
+
+We quickly noticed that the training data size is less than 3% of the testing data. We might not have enough diversity in the training data to predict the labels for testing data. Indeed, it appears that the test data set is fairly skewed to cover types 1 and 2, which we have noted are very difficult to distinguish between.
+
+We also noticed that 100% accuracy was achieved in this Kaggle competition previously, but that appeared to due to a "cheat" already known to the Kaggle team ([link](https://www.kaggle.com/c/forest-cover-type-prediction/discussion/11512)). As such, our objective is not to obsess over the accuracy of the "testing data", but to explore which classification algorithm and/or process works best for the dataset. 
 
 ## Initial Setup
 #### Import Required Libraries
@@ -60,7 +82,6 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import plot_confusion_matrix
 import xgboost as xg
 
-
 # So we can reload packages without restarting the kernel
 import importlib
 ```
@@ -74,7 +95,7 @@ importlib.reload(fe)
 
 
 
-    <module 'feature_engineering' from '/home/jupyter/mids-w207-final-project/feature_engineering.py'>
+    <module 'feature_engineering' from '/home/jovyan/work/feature_engineering.py'>
 
 
 
@@ -84,9 +105,9 @@ importlib.reload(fe)
 !pip install xgboost
 ```
 
-    Requirement already satisfied: xgboost in /opt/conda/lib/python3.7/site-packages (1.2.1)
-    Requirement already satisfied: numpy in /opt/conda/lib/python3.7/site-packages (from xgboost) (1.18.5)
-    Requirement already satisfied: scipy in /opt/conda/lib/python3.7/site-packages (from xgboost) (1.5.3)
+    Requirement already satisfied: xgboost in /opt/conda/lib/python3.8/site-packages (1.2.1)
+    Requirement already satisfied: scipy in /opt/conda/lib/python3.8/site-packages (from xgboost) (1.5.3)
+    Requirement already satisfied: numpy in /opt/conda/lib/python3.8/site-packages (from xgboost) (1.18.5)
 
 
 #### Load Data
@@ -106,27 +127,22 @@ Overall Data Pipeline
 The following transformations were made in the function below. 
 
 #### Transform Hillshade
-Now we'll normalize the "Hillsdale" variables by dividing them by 255. The hillshade variables contain index of shades with a value between 0 and 255. 
-
-#### Create new soil types
-Now we'll create additional features to magnify the differences betweeen cover type1 and 2, and covery type3 and 6.
-
-#### Combine soil types 
+- Now we'll normalize the "Hillsdale" variables by dividing them by 255. The hillshade variables contain index of shades with a value between 0 and 255. 
 
 #### Drop rare or non-existant soil types 
-Now we'll drop soil types that don't exist in the training set. Then we will combine soil types 35, 38, 39 and 40 because they have a very similar distribution. 
+- Now we'll drop soil types that don't exist in the training set. 
 
-#### Create new features based on soil type descriptions 
-TODO: Explain how we split up soil descriptions into different features to account for overlap.
+#### Combine soil types 
+- We will combine soil types 35, 38, 39 and 40 because they have a very similar distribution. 
 
 #### Transform Aspect
-TODO: Explain aspect problem and solution
+- The Aspect is expressed in degrees. 0 degrees and 360 degrees is the same thing but represented differently. This may contribute to the poor distinction among the lables. We'll extract the sine and cosine values to normalize this feature. 
 
 #### Log transformations
-Per EDA, we noticed the distribution of the "distance" related variables are skewed. Now we'll log transform the features related to the distances to make the distribution smoother, and thus decrease the variances of the predictions.
+- Per EDA, we noticed the distribution of the "distance" related variables are skewed. Now we'll log transform the features related to the distances to make the distribution smoother, and thus decrease the variances of the predictions.
 
 #### Add polynomial features
-Per EDA, Elevation is a numerical variable and there is a clearer distinciton in Elevation among the dependenet variable, cover type. To imporve the signal, we sqaured Elevation. 
+- Per EDA, Elevation is a numerical variable and there is a clearer distinciton in Elevation among the dependenet variable, cover type. To imporve the signal, we sqaured Elevation. 
 
 #### Drop irrelevant or problematic features
 - We'll drop "Id" because it does not provide any meaning in the classifications.
@@ -326,14 +342,16 @@ plt.show()
 ```
 
 
+    
 ![png](backups/clear_cut_solution_files/backups/clear_cut_solution_12_0.png)
+    
 
 
 After the feature transformation, we see improved distinction in median values, espeically for cover type 6, where the median is notably higher than that of other cover types and the distribution is concentrated around the median.
 
 #### Segment data
 
-Based on closer examination of our model performance, we found that the models consistently confused cover types 1 and 2 and covertypes 3 and 6. So we decided to break up our model into one primary model (outputs 12 (for 1 or 2), 36 (for outputs 3 or 6), 4, 5 or 7) and two secondary models (one for distinguishing 1 or 2 and the other for distinguishing 3 or 6). 
+Based on closer examination of our model performance, we found that the models consistently confused cover types 1 and 2 and covertypes 3 and 6. So we decided to break up our model into one primary model (outputs 12 (for 1 or 2), 36 (for outputs 3 or 6), 4, 5 or 7) and two secondary models (one for distinguishing 1 or 2 and the other for distinguishing 3 or 6). We'll implement more feature engineering on the subset of data focused on 12 and 36 to combine soil types with the same distribution. 
 
 
 ```python
@@ -345,7 +363,7 @@ train_df_12 = fe.combine_environment_features_ct12(train_df_12)
 train_df_36 = fe.combine_environment_features_ct36(train_df_36)
 ```
 
-#### Split data into train/dev
+#### Split data into training and development sets
 
 Then, we split the training data into a training data set (90%) and development data set (10%). We will also have a large, separate test data set. 
 
@@ -488,6 +506,13 @@ knn_model_cover_type_36 = KNeighborsClassifier(num_neighbors)
 knn_model_cover_type_36.fit(train_data_cover_type_36, train_labels_cover_type_36)
 ```
 
+
+
+
+    KNeighborsClassifier(n_neighbors=1)
+
+
+
 #### Multi-Layer Perceptron
 
 
@@ -628,12 +653,12 @@ forest_predictions_all_data[forest_predicted_36_indicies] = forest_predictions_3
 print("Random Forest Perforamance Against Real Dev Labels - Overall Score: ",  accuracy_score(np.array(dev_labels_original).reshape(-1, 1), forest_predictions_all_data.reshape(-1, 1)))
 ```
 
-    Random Forest Perforamance (against original dev labels) - Original data:  0.5119047619047619
-    Random Forest Perforamance (against 12/36 dev labels) - Model 1:  0.5383597883597884
-    Random Forest Perforamance Against Real Dev Labels - Overall Score:  0.38492063492063494
+    Random Forest Perforamance (against original dev labels) - Original data:  0.5145502645502645
+    Random Forest Perforamance (against 12/36 dev labels) - Model 1:  0.5158730158730159
+    Random Forest Perforamance Against Real Dev Labels - Overall Score:  0.36243386243386244
 
 
-If set max_depth =8, without subsetting, the accuracy on the dev data is 74%-75%. With separte model training and consolidating the results, accuracy on dev data has improved to 79%-80%. However, this leads to overfitting. We keep "max_depth=1" to achieve better fitting on the "testing data".
+If set max_depth =8, without subsetting, the accuracy on the dev data is 74%-75%. With separate model training and consolidating the results, accuracy on dev data has improved to 79%-80%. However, this leads to overfitting. We keep "max_depth=1" to achieve better fitting on the "testing data''.
 
 #### Evaluate KNN Model
 
@@ -642,6 +667,11 @@ If set max_depth =8, without subsetting, the accuracy on the dev data is 74%-75%
 # Evaluate knn model based on original data (no subsetting)
 knn_original_score = knn_original.score(dev_data_original,dev_labels_original)
 print("KNN Perforamance (against original dev labels) - Original data: ",knn_original_score)
+
+# Plot Confusion Matrix
+plot_confusion_matrix(knn_original, dev_data_original, dev_labels_original, values_format = "d")
+plt.title("KNN with Original Data Confusion Matrix")
+plt.plot()
 
 knn_predictions_all_data = knn_model_all_data.predict(dev_data_12_36_4_5_7)
 print("KNN Perforamance (against 12/36 dev labels) - Model 1: ", accuracy_score(np.array(dev_labels_12_36_4_5_7), knn_predictions_all_data))
@@ -663,9 +693,15 @@ knn_predictions_all_data[knn_predicted_36_indicies] = knn_predictions_3_6
 print("KNN Perforamance Against Real Dev Labels - Overall Score: ",  accuracy_score(np.array(dev_labels_original).reshape(-1, 1), knn_predictions_all_data.reshape(-1, 1)))
 ```
 
-    KNN Perforamance (against original dev labels) - Original data:  0.8366402116402116
-    KNN Perforamance (against 12/36 dev labels) - Model 1:  0.9186507936507936
-    KNN Perforamance Against Real Dev Labels - Overall Score:  0.9034391534391535
+    KNN Perforamance (against original dev labels) - Original data:  0.8379629629629629
+    KNN Perforamance (against 12/36 dev labels) - Model 1:  0.9140211640211641
+    KNN Perforamance Against Real Dev Labels - Overall Score:  0.8981481481481481
+
+
+
+    
+![png](backups/clear_cut_solution_files/backups/clear_cut_solution_37_1.png)
+    
 
 
 #### Evaluate MLP Model
@@ -700,13 +736,15 @@ mlp_predictions_all_data[mlp_predicted_36_indicies] = mlp_predictions_3_6
 print("MLP Perforamance Against Real Dev Labels - Overall Score: ",  accuracy_score(np.array(dev_labels_original).reshape(-1, 1), mlp_predictions_all_data.reshape(-1, 1)))
 ```
 
-    MLP on original data accuracy: 0.8386243386243386
-    MLP Perforamance (against 12/36 dev labels)- Model 1:  0.9259259259259259
-    MLP Perforamance Against Real Dev Labels - Overall Score:  0.8571428571428571
+    MLP on original data accuracy: 0.8531746031746031
+    MLP Perforamance (against 12/36 dev labels)- Model 1:  0.9444444444444444
+    MLP Perforamance Against Real Dev Labels - Overall Score:  0.8908730158730159
 
 
 
+    
 ![png](backups/clear_cut_solution_files/backups/clear_cut_solution_39_1.png)
+    
 
 
 Without training sub-models for type 1 and 2, type 3 and 6, the accuracy of the MLP model on dev data is 83.7%. With separate sub-model training, accuracy on the dev data improved to 91.9%. 
@@ -745,13 +783,15 @@ adaboost_predictions_all_data[adaboost_predicted_36_indicies] = adaboost_predict
 print("Adaboost Perforamance Against Real Dev Labels - Overall Score: ",  accuracy_score(np.array(dev_labels_original).reshape(-1, 1), adaboost_predictions_all_data.reshape(-1, 1)))
 ```
 
-    Adaboost with original data accuracy: 0.8247354497354498
-    Adaboost Perforamance (against 12/36 dev labels) - Model 1:  0.9365079365079365
-    Adaboost Perforamance Against Real Dev Labels - Overall Score:  0.919973544973545
+    Adaboost with original data accuracy: 0.8161375661375662
+    Adaboost Perforamance (against 12/36 dev labels) - Model 1:  0.9437830687830688
+    Adaboost Perforamance Against Real Dev Labels - Overall Score:  0.9305555555555556
 
 
 
+    
 ![png](backups/clear_cut_solution_files/backups/clear_cut_solution_42_1.png)
+    
 
 
 We only trained and evaluated an adaboost model on the original data, to determine how it compares to the XGboost model. As the accuracy is 5% lower than that of the XGBoost model, we'll use XGBoost for our final model.
@@ -789,17 +829,18 @@ xgb_predictions_all_data[xgboost_predicted_36_indicies] = xgboost_predictions_3_
 print("Xgboost Perforamance Against Real Dev Labels - Overall Score: ",  accuracy_score(np.array(dev_labels_original).reshape(-1, 1), xgb_predictions_all_data.reshape(-1, 1)))
 ```
 
-    XGBoost with original data accuracy: 0.8690476190476191
-    Xgboost Perforamance (against 12/36 dev labels) - Model 1:  0.9404761904761905
-    Xgboost Perforamance Against Real Dev Labels - Overall Score:  0.9285714285714286
+    XGBoost with original data accuracy: 0.8816137566137566
+    Xgboost Perforamance (against 12/36 dev labels) - Model 1:  0.9378306878306878
+    Xgboost Perforamance Against Real Dev Labels - Overall Score:  0.9232804232804233
 
 
 
+    
 ![png](backups/clear_cut_solution_files/backups/clear_cut_solution_45_1.png)
+    
 
 
-Without subsetting, xgboost algorithm works very well for the dev data, showing an accuracy above 86%, which is 3% better than the 2nd best performer, or the MLP model. With subsetting and training submodels for type 1 and 2, and 3 and 6, the accuracy on the dev data has imrpoved to over 94%. However, when applied to the "testing data" in Kaggle, the accuracy dropped back to 75%. Still 1% higher than that from MLP model, but the difference is small. Also, there is small decrease in model accuracy in "testing data" when we train one model compared to training separate models and consolidate.
-
+Without subsetting, xgboost algorithm works very well for the dev data, showing an accuracy above 86%, which is 3% better than the 2nd best performer, or the MLP model. With subsetting and training submodels for type 1 and 2, and 3 and 6, the accuracy on the dev data has improved to over 94%. However, when applied to the "testing data'' in Kaggle, the accuracy dropped back to 75%. Still 1% higher than that from the MLP model, but the difference is small. Also, there is a small decrease in model accuracy in "testing data" when we train one model compared to training separate models and consolidate.
 
 #### Ensemble
 Here we will combine the three best performing models and implement a "voting" system to try to improve accuracy.
@@ -818,8 +859,8 @@ accuracy = accuracy_score(dev_labels_original, new_predictions)
 print("Ensemble Accuracy: ", accuracy)
 ```
 
-    Models disagreed on 1026/1512 examples.
-    Ensemble Accuracy:  0.9252645502645502
+    Models disagreed on 1078/1512 examples.
+    Ensemble Accuracy:  0.9351851851851852
 
 
 ### Test Results
@@ -945,7 +986,7 @@ test_adaboost_predictions_original[test_adaboost_predicted_12_indicies] = test_a
 test_adaboost_predictions_original[test_adaboost_predicted_36_indicies] = test_adaboost_predictions_3_6
 ```
 
-    (450013, 56)
+    (449078, 56)
 
 
 #### Test XGBoost Ensemble
@@ -983,9 +1024,12 @@ pd.DataFrame.from_dict(dict(zip(test_df_id.to_list(),test_xgb_predictions_origin
 new_predictions = models.ensemble(test_knn_predictions_original,
                                   test_forest_predictions_original, 
                                   test_mlp_predictions_original,
-                                  test_xg_predictions_original,
-                                  test_ada_predictions_original)
+                                  test_xgb_predictions_original,
+                                  test_adaboost_predictions_original)
 ```
+
+    Models disagreed on 319187/565892 examples.
+
 
 #### Generate Submission File
 
@@ -1026,6 +1070,20 @@ result.to_csv(f"submissions/cosolidated_submission.csv",index_label="Id")
 # Also archiving this bad boy
 !jupyter nbconvert clear_cut_solution.ipynb --to html --output="backups/clear_cut_solution"
 ```
+
+    [NbConvertApp] Converting notebook clear_cut_solution.ipynb to python
+    [NbConvertApp] Writing 37958 bytes to backups/clear_cut_solution.py
+    [NbConvertApp] Converting notebook clear_cut_solution.ipynb to markdown
+    [NbConvertApp] Support files will be in backups/clear_cut_solution_files/
+    [NbConvertApp] Making directory backups/clear_cut_solution_files/backups
+    [NbConvertApp] Making directory backups/clear_cut_solution_files/backups
+    [NbConvertApp] Making directory backups/clear_cut_solution_files/backups
+    [NbConvertApp] Making directory backups/clear_cut_solution_files/backups
+    [NbConvertApp] Making directory backups/clear_cut_solution_files/backups
+    [NbConvertApp] Writing 44721 bytes to backups/clear_cut_solution.md
+    [NbConvertApp] Converting notebook clear_cut_solution.ipynb to html
+    [NbConvertApp] Writing 872766 bytes to backups/clear_cut_solution.html
+
 
 
 ```python

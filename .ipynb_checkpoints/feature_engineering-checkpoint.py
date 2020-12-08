@@ -256,7 +256,6 @@ def drop_unseen_soil_types(data):
     # Remove soil type 7 and 15 due to no data
     data.drop(columns=["Soil_Type7", "Soil_Type15"], inplace=True)
     # Remove soil type 19, 37, 21, 27,36 due to low frequency in training data -
-    # TODO: should we be dropping these?
     data.drop(
         columns=[
             "Soil_Type19",
@@ -439,7 +438,7 @@ def set_soil_type_by_attributes(data):
         The training data of shape (Training Examples, Features)
     """
     # Pull in the text of the soil types
-    with open("km_EDA/soil_raw.txt") as f:
+    with open("alt_soil/soil_raw.txt") as f:
         s_raw = f.read()
 
     s = preprocess_soil_type(s_raw)
