@@ -238,33 +238,6 @@ def subset_data(data):
     return data , train_data_12_36_5_7, train_data_12, train_data_36
 
 
-def manipulate_data(data):
-    """ 
-    This function applys transformations on the input data set
-    
-    Parameters: 
-        data (dataframe): n_examples x m_features (int64) dataframe 
-    """
-    
-    data = scale_hillside(data)
-    
-    data = drop_unseen_soil_types(data)  
-    data = combine_soil_types(data)
-    
-    data = transform_aspect(data)
-    
-    features_to_log = ['Horizontal_Distance_To_Hydrology',
-           'Horizontal_Distance_To_Roadways','Horizontal_Distance_To_Fire_Points']
-    data = log_features(data, features_to_log)
-    
-    features_to_square = ["Elevation"]
-    data = add_polynomial_features(data, features_to_square)
-
-    features_to_drop = ["Id","Hillshade_9am","Vertical_Distance_To_Hydrology"]
-    drop_features(data, features_to_drop)
-    
-    return data
-
 
 def drop_unseen_soil_types(data):
     """
@@ -374,11 +347,36 @@ def combine_soil_types(data):
     # Combine soil type 6 and wilderness area 4
     data["st6w4"] = data["Soil_Type6"] + data["Wilderness_Area4"]
 
-#     data.drop(columns=["Soil_Type35","Soil_Type38", "Soil_Type39",'Soil_Type40','Soil_Type10','Soil_Type11','Soil_Type16','Soil_Type17','Soil_Type9','Soil_Type12','Soil_Type31','Soil_Type33','Soil_Type23','Soil_Type24','Soil_Type6','Wilderness_Area4'], inplace=True)
 
     return data
 
 
+def manipulate_data(data):
+    """ 
+    This function applys transformations on the input data set
+    
+    Parameters: 
+        data (dataframe): n_examples x m_features (int64) dataframe 
+    """
+    
+    data = scale_hillside(data)
+    
+    data = drop_unseen_soil_types(data)  
+    data = combine_soil_types(data)
+    
+    data = transform_aspect(data)
+    
+    features_to_log = ['Horizontal_Distance_To_Hydrology',
+           'Horizontal_Distance_To_Roadways','Horizontal_Distance_To_Fire_Points']
+    data = log_features(data, features_to_log)
+    
+    features_to_square = ["Elevation"]
+    data = add_polynomial_features(data, features_to_square)
+
+    features_to_drop = ["Id","Hillshade_9am","Vertical_Distance_To_Hydrology"]
+    drop_features(data, features_to_drop)
+    
+    return data
 
 
 
